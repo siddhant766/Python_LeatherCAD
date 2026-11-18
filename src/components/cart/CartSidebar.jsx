@@ -19,7 +19,7 @@ export function CartSidebar() {
     return (
         <aside
             aria-label="Shopping Cart"
-            className="fixed top-0 right-0 bottom-0 z-50 w-full max-w-md bg-card/95 backdrop-blur-xl border-l border-border shadow-[-12px_0_35px_rgba(0,0,0,0.6)] flex flex-col animate-in slide-in-from-right duration-300"
+            className="fixed top-0 right-0 bottom-0 z-50 w-full md:w-[400px] lg:w-[448px] bg-card/95 backdrop-blur-xl border-l border-border shadow-[-12px_0_35px_rgba(0,0,0,0.6)] flex flex-col animate-in slide-in-from-right duration-300"
         >
             <div className="p-6 border-b border-border flex items-center justify-between">
                 <div className="flex items-center gap-2">

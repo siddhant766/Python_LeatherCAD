@@ -122,7 +122,11 @@ export default function CatalogPage() {
 
             {/* Product Grid */}
             <div className="container mx-auto px-4 pb-20 relative z-10">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8">
+                <div className={`grid gap-8 transition-all duration-300 ${
+                    isOpen
+                        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
+                        : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                }`}>
                     {filteredProducts.map(product => (
                         <div key={product.id} className={`group rounded-2xl overflow-hidden border transition-all duration-300 hover:shadow-2xl ${isDarkMode
                             ? 'bg-white/5 border-white/5 hover:border-white/20 hover:shadow-blue-500/5'

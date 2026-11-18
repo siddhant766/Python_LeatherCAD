@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import Layout from './components/layout/Layout';
 import LandingPage from './pages/LandingPage';
@@ -24,6 +24,7 @@ import DesignerDashboard from './pages/DesignerDashboard';
 import PaymentPortal from './pages/PaymentPortal';
 
 import { CartSidebar } from './components/cart/CartSidebar';
+import { useCartStore } from './store/CartStore';
 import { SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
 
 const ADMIN_EMAILS = [
@@ -74,10 +75,14 @@ const RequireAdmin = ({ children }) => {
     return children;
 };
 
-function App() {
+function AppContent() {
+    const location = useLocation();
+    const isOpen = useCartStore((state) => state.isOpen);
+    const isStandaloneRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/customizer');
+    const shouldShift = isOpen && !isStandaloneRoute;
+
     return (
-        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
-            <CartSidebar />
+        <div className={`transition-all duration-300 ease-in-out ${shouldShift ? 'md:mr-[400px] lg:mr-[448px]' : ''}`}>
             <Routes>
                 <Route path="/" element={<LandingPage />} />
                 <Route path="/pricing" element={<Layout><PricingPage /></Layout>} />
@@ -129,6 +134,15 @@ function App() {
                 } />
                 <Route path="/payment-portal" element={<PaymentPortal />} />
             </Routes>
+        </div>
+    );
+}
+
+function App() {
+    return (
+        <Router future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+            <CartSidebar />
+            <AppContent />
             <Toaster position="top-center" richColors />
         </Router>
     );
