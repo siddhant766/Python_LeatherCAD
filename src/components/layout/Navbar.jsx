@@ -1,13 +1,34 @@
-import { Link } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ShoppingBag, User, Shield } from 'lucide-react';
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
 
 import { useCartStore } from '../../store/CartStore';
 
-export default function Navbar() { // Removed props
+export default function Navbar() {
+    const location = useLocation();
+    const navigate = useNavigate();
     const items = useCartStore((state) => state.items);
     const toggleCart = useCartStore((state) => state.toggleCart);
-    const cartCount = items.length; // Or reduce quantity if you prefer total quantity
+    const cartCount = items.length;
+
+    const handleFeaturesClick = (e) => {
+        e.preventDefault();
+        const scrollToSection = () => {
+            const el = document.getElementById('features');
+            if (el) {
+                const navHeight = 70;
+                const top = el.getBoundingClientRect().top + window.pageYOffset - navHeight;
+                window.scrollTo({ top, behavior: 'smooth' });
+            }
+        };
+
+        if (location.pathname === '/') {
+            scrollToSection();
+        } else {
+            navigate('/#features');
+            setTimeout(scrollToSection, 150);
+        }
+    };
 
     return (
         <nav className="border-b border-white/5 bg-black/60 backdrop-blur-xl sticky top-0 z-50 transition-all duration-300">
@@ -18,7 +39,13 @@ export default function Navbar() { // Removed props
                 </Link>
 
                 <div className="flex items-center gap-6">
-                    <Link to="/" className="text-gray-300 hover:text-white transition-colors duration-200">Features</Link>
+                    <a
+                        href="/#features"
+                        onClick={handleFeaturesClick}
+                        className="text-gray-300 hover:text-white transition-colors duration-200 cursor-pointer"
+                    >
+                        Features
+                    </a>
                     <Link to="/catalog" className="text-gray-400 hover:text-white transition-colors">Catalog</Link>
                     <Link to="/pricing" className="text-gray-400 hover:text-white transition-colors">Pricing</Link>
                 </div>
