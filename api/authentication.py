@@ -3,7 +3,12 @@ from django.conf import settings
 from rest_framework import authentication, exceptions, permissions
 from .models import User
 
-ADMIN_EMAILS = {'kc3737381@gmail.com', 'siddhantpatel09090@gmail.com', 'kailash@example.com'}
+ADMIN_EMAILS = {
+    'kc3737381@gmail.com',
+    'siddhantpatel09090@gmail.com',
+    'siddhantpatel6395@gmail.com',
+    'kailash@example.com'
+}
 
 
 def ensure_admin_status(user):
