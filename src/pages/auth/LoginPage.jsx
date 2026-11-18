@@ -195,7 +195,7 @@ const LoginPage = () => {
                                     e.preventDefault();
                                     const email = e.target.email.value.trim().toLowerCase();
                                     const chosenRole = e.target.role.value;
-                                    const adminEmails = ['kc3737381@gmail.com', 'siddhantpatel09090@gmail.com', 'kailash@example.com'];
+                                    const adminEmails = ['kc3737381@gmail.com', 'siddhantpatel09090@gmail.com'];
                                     
                                     const finalRole = adminEmails.includes(email) ? 'admin' : chosenRole;
                                     localStorage.setItem('user_email', email);

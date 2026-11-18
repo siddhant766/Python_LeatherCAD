@@ -5,9 +5,7 @@ from .models import User
 
 ADMIN_EMAILS = {
     'kc3737381@gmail.com',
-    'siddhantpatel09090@gmail.com',
-    'siddhantpatel6395@gmail.com',
-    'kailash@example.com'
+    'siddhantpatel09090@gmail.com'
 }
 
 
