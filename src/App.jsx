@@ -110,10 +110,10 @@ function AppContent() {
                 <Route path="/blog" element={<Layout><BlogPage /></Layout>} />
                 <Route path="/legal" element={<Layout><LegalPage /></Layout>} />
 
-                {/* 3-Role Login Routes */}
-                <Route path="/login" element={<LoginPage />} />
+                {/* 3-Role Login Routes with wildcard support for Clerk subroutes (e.g. OTP email verification) */}
+                <Route path="/login/*" element={<LoginPage />} />
                 <Route path="/admin-login" element={<Navigate to="/login?role=admin" replace />} />
-                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/signup/*" element={<SignupPage />} />
                 <Route path="/forgot-password" element={<ForgotPwPage />} />
                 <Route path="/resetpassword/:token" element={<ResetPwPage />} />
 
@@ -153,6 +153,7 @@ function AppContent() {
                     </SignedIn>
                 } />
                 <Route path="/payment-portal" element={<PaymentPortal />} />
+                <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
         </div>
     );

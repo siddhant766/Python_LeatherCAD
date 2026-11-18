@@ -246,6 +246,8 @@ const LoginPage = () => {
                         <div className="w-full">
                             <SignIn
                                 key={loginType}
+                                path="/login"
+                                routing="path"
                                 fallbackRedirectUrl={getRedirectUrl()}
                                 signUpUrl={`/signup?role=${loginType}`}
                                 appearance={{
@@ -266,8 +268,9 @@ const LoginPage = () => {
                                     elements: {
                                         rootBox: "w-full",
                                         card: "shadow-none border-none w-full p-0 bg-transparent",
-                                        headerTitle: "hidden",
-                                        headerSubtitle: "hidden",
+                                        headerTitle: "text-white text-lg font-bold text-center",
+                                        headerSubtitle: "text-gray-400 text-xs text-center mt-1",
+                                        otpCodeFieldInput: "!text-white !bg-[#171717] !border-white/30 focus:!border-[#D4AF37] rounded-xl text-center text-xl font-bold",
                                         formButtonPrimary: "font-bold shadow-lg hover:shadow-xl transition-all",
                                         socialButtonsBlockButton: "border-white/10 text-gray-200 hover:bg-white/5",
                                         dividerLine: "bg-white/10",
