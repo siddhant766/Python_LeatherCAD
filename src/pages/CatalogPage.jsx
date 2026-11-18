@@ -34,7 +34,8 @@ export default function CatalogPage() {
         e.stopPropagation();
 
         const cartItem = {
-            id: `${Date.now()}-${product.id}`,
+            id: `prod-${product.id}`,
+            name: product.name,
             product: product.name,
             price: product.price,
             image: product.image,
