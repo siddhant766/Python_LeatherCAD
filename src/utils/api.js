@@ -34,7 +34,7 @@ api.interceptors.request.use(async (config) => {
     }
 
     // 3. Fallback token for admin
-    const ADMIN_EMAILS = ['kc3737381@gmail.com', 'siddhantpatel09090@gmail.com', 'kailash@example.com'];
+    const ADMIN_EMAILS = ['kc3737381@gmail.com', 'siddhantpatel09090@gmail.com', 'siddhantpatel6395@gmail.com', 'kailash@example.com'];
     if (!token && email) {
         token = `DEV_TOKEN_${email}`;
     }
