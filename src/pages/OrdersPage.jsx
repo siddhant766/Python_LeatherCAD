@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 import { Package, Calendar, ChevronRight, Loader2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
@@ -19,7 +20,7 @@ export default function OrdersPage() {
                         Authorization: `Bearer ${token}`
                     }
                 };
-                const { data } = await axios.get('http://localhost:3000/api/orders/myorders', config);
+                const { data } = await axios.get(`${API_BASE}/orders/myorders`, config);
                 setOrders(data);
             } catch (error) {
                 console.error("Failed to fetch orders", error);

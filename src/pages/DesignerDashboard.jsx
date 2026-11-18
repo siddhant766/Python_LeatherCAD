@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { PenTool, Plus, LogOut, LayoutDashboard, Image as ImageIcon, Box, ChevronRight, ShoppingBag } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 import OrdersPage from './OrdersPage';
 
 export default function DesignerDashboard() {
@@ -26,7 +27,7 @@ export default function DesignerDashboard() {
     const fetchDesigns = async () => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get('http://localhost:3000/api/designs', {
+            const response = await axios.get(`${API_BASE}/designs`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
             // Ensure we're setting an array
@@ -49,7 +50,7 @@ export default function DesignerDashboard() {
         if (window.confirm('Are you sure you want to delete this design?')) {
             try {
                 const token = localStorage.getItem('token');
-                await axios.delete(`http://localhost:3000/api/designs/${id}`, {
+                await axios.delete(`${API_BASE}/designs/${id}`, {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 fetchDesigns(); // Refresh list

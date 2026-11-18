@@ -3,6 +3,7 @@ import { useState, useEffect, useRef } from 'react';
 import Product3DViewer from '../components/customizer/Product3DViewer';
 import { ArrowLeft, Share2, Download, Save, ShoppingCart, Layers, Palette, Sparkles, Loader2, Shield } from 'lucide-react';
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/CartStore';
 import { useAuth } from '@clerk/clerk-react';
@@ -49,7 +50,7 @@ export default function Customizer() {
         setAiPreviewConfig(null);
         try {
             const token = await getToken();
-            const response = await axios.post('http://localhost:3000/api/ai/generate-design', {
+            const response = await axios.post(`${API_BASE}/ai/generate-design`, {
                 prompt: aiPrompt,
                 productType: selectedProduct
             }, {
@@ -77,7 +78,7 @@ export default function Customizer() {
         // Fetch real product ID from backend based on selected string
         const fetchProductId = async () => {
             try {
-                const response = await axios.get('http://localhost:3000/api/products');
+                const response = await axios.get(`${API_BASE}/products`);
                 // Find product that matches category or name
                 const product = response.data.find(p => p.category === selectedProduct || p.name.toLowerCase().includes(selectedProduct));
                 if (product) {
@@ -111,7 +112,7 @@ export default function Customizer() {
                 return;
             }
 
-            await axios.post('http://localhost:3000/api/designs', {
+            await axios.post(`${API_BASE}/designs`, {
                 product: productId,
                 name,
                 configuration: config,

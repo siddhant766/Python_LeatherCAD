@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 import { User, Building, Mail, Lock, Loader2, Save } from 'lucide-react';
 import useAuthStore from '../store/AuthStore';
 import { toast } from 'sonner';
@@ -54,7 +55,7 @@ export default function SettingsPage() {
             };
             if (formData.password) updateData.password = formData.password;
 
-            const { data } = await axios.put('http://localhost:3000/api/auth/profile', updateData, config);
+            const { data } = await axios.put(`${API_BASE}/auth/profile`, updateData, config);
 
             // Update local storage
             localStorage.setItem('user', JSON.stringify(data));

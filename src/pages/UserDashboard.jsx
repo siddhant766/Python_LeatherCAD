@@ -3,6 +3,7 @@ import { LayoutDashboard, ShoppingBag, Settings, LogOut, Plus, Search, ChevronRi
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 import OrdersPage from './OrdersPage';
 import SettingsPage from './SettingsPage';
 
@@ -23,7 +24,7 @@ export default function UserDashboard() {
             const token = localStorage.getItem('token');
             const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 
-            const response = await axios.get('http://localhost:3000/api/designs', config);
+            const response = await axios.get(`${API_BASE}/designs`, config);
             setDesigns(Array.isArray(response.data) ? response.data : []);
             setLoading(false);
         } catch (error) {

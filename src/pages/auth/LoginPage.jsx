@@ -5,7 +5,7 @@ import { ShieldCheck, User } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const LoginPage = () => {
-    const [loginType, setLoginType] = useState('user'); // 'user' | 'admin'
+    const [loginType, setLoginType] = useState('user'); // 'user' | 'admin' | 'dev'
 
     const isUser = loginType === 'user';
 
@@ -29,7 +29,7 @@ const LoginPage = () => {
                         </span>
                     </Link>
                     <p className="text-gray-400 mt-2 text-sm">
-                        {isUser ? 'Sign in to your account' : 'Administrative Access'}
+                        {isUser ? 'Sign in to your account' : loginType === 'admin' ? 'Administrative Access' : 'Developer Quick Access'}
                     </p>
                 </div>
 
@@ -45,7 +45,7 @@ const LoginPage = () => {
                     </button>
                     <button
                         onClick={() => setLoginType('admin')}
-                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all duration-200 z-10 ${!isUser ? 'bg-red-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 text-sm font-medium rounded-md transition-all duration-200 z-10 ${loginType === 'admin' ? 'bg-red-600 text-white shadow-lg' : 'text-gray-400 hover:text-gray-200'
                             }`}
                     >
                         <ShieldCheck size={16} />
@@ -53,10 +53,13 @@ const LoginPage = () => {
                     </button>
                 </div>
 
-                {/* Dev Login Toggle (Hiddenish) */}
-                <div className="absolute top-4 right-4 opacity-20 hover:opacity-100 transition-opacity">
-                    <button onClick={() => setLoginType(loginType === 'dev' ? 'user' : 'dev')} className="text-xs text-white">
-                        {loginType === 'dev' ? 'Switch to Clerk' : 'Dev Mode'}
+                {/* Dev Login Toggle */}
+                <div className="absolute top-4 right-4">
+                    <button
+                        onClick={() => setLoginType(loginType === 'dev' ? 'admin' : 'dev')}
+                        className="text-xs px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-yellow-300 font-medium transition-all"
+                    >
+                        {loginType === 'dev' ? 'Exit Dev' : 'Dev Mode'}
                     </button>
                 </div>
 
@@ -65,23 +68,62 @@ const LoginPage = () => {
                     {loginType === 'dev' ? (
                         <div className="w-full space-y-4">
                             <div className="bg-yellow-500/10 border border-yellow-500/50 p-3 rounded text-yellow-200 text-xs mb-4">
-                                <strong>Dev Mode:</strong> Log in as seeded users (e.g., kailash@example.com).
+                                <strong>Admin Dev Mode:</strong> Instant access as <code>kc3737381@gmail.com</code> or <code>siddhantpatel09090@gmail.com</code>.
+                            </div>
+                            <div className="grid grid-cols-2 gap-2 mb-3">
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const email = 'siddhantpatel09090@gmail.com';
+                                        localStorage.setItem('user_email', email);
+                                        localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
+                                        localStorage.setItem('user', JSON.stringify({ email, name: 'Siddhant Patel', role: 'admin' }));
+                                        window.location.href = '/admin';
+                                    }}
+                                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-semibold py-2 px-3 rounded-lg transition"
+                                >
+                                    Login as Siddhant
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        const email = 'kc3737381@gmail.com';
+                                        localStorage.setItem('user_email', email);
+                                        localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
+                                        localStorage.setItem('user', JSON.stringify({ email, name: 'Kailash', role: 'admin' }));
+                                        window.location.href = '/admin';
+                                    }}
+                                    className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-semibold py-2 px-3 rounded-lg transition"
+                                >
+                                    Login as Kailash
+                                </button>
                             </div>
                             <form onSubmit={(e) => {
                                 e.preventDefault();
-                                const email = e.target.email.value;
-                                // Simple mock login logic
-                                if (email.includes('@')) {
+                                const email = e.target.email.value.trim().toLowerCase();
+                                const adminEmails = ['kc3737381@gmail.com', 'siddhantpatel09090@gmail.com', 'kailash@example.com'];
+                                localStorage.setItem('user_email', email);
+                                if (adminEmails.includes(email)) {
                                     localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
+                                    localStorage.setItem('user', JSON.stringify({ email, name: email.includes('siddhant') ? 'Siddhant Patel' : 'Kailash', role: 'admin' }));
+                                    window.location.href = '/admin';
+                                } else {
+                                    localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
+                                    localStorage.setItem('user', JSON.stringify({ email, name: email.split('@')[0], role: 'user' }));
                                     window.location.href = '/dashboard';
                                 }
                             }} className="space-y-4">
                                 <div>
-                                    <label className="block text-gray-300 text-sm font-medium mb-1">Email</label>
-                                    <input name="email" type="email" defaultValue="kailash@example.com" className="w-full bg-white/5 border border-white/10 rounded p-2 text-white outline-none focus:border-blue-500" />
+                                    <label className="block text-gray-300 text-sm font-medium mb-1">Custom Email</label>
+                                    <input
+                                        name="email"
+                                        type="email"
+                                        defaultValue="siddhantpatel09090@gmail.com"
+                                        className="w-full bg-white/5 border border-white/10 rounded p-2 text-white outline-none focus:border-blue-500"
+                                    />
                                 </div>
-                                <button type="submit" className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded transition">
-                                    Dev Login
+                                <button type="submit" className="w-full bg-green-600 hover:bg-green-500 text-white font-bold py-2 rounded transition shadow-lg">
+                                    Sign In with Custom Email
                                 </button>
                             </form>
                         </div>
@@ -96,7 +138,7 @@ const LoginPage = () => {
                                     socialButtonsVariant: "blockButton",
                                 },
                                 variables: {
-                                    colorPrimary: isUser ? "#3b82f6" : "#dc2626", // Bright Blue for user, Red for admin
+                                    colorPrimary: isUser ? "#3b82f6" : "#dc2626",
                                     colorText: "#ffffff",
                                     colorBackground: "transparent",
                                     colorInputBackground: "#171717",

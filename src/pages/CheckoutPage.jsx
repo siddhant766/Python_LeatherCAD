@@ -3,6 +3,7 @@ import { CreditCard, Truck, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import { API_BASE } from '../utils/api';
 
 
 import { useCartStore } from '../store/CartStore';
@@ -80,7 +81,7 @@ export default function CheckoutPage() {
                 totalPrice: cartTotal,
             };
 
-            await axios.post('http://localhost:3000/api/orders', orderData, orderConfig);
+            await axios.post(`${API_BASE}/orders`, orderData, orderConfig);
 
             clearCart();
             setStep(3);

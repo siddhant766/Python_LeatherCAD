@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "server": "node server/server.js",
+    "server": ".venv\\Scripts\\python.exe manage.py runserver 8000",
+    "server:seed": ".venv\\Scripts\\python.exe manage.py seed_data",
+    "server:migrate": ".venv\\Scripts\\python.exe manage.py migrate",
+    "server:node": "node server/server.js",
     "start": "concurrently \"npm run server\" \"npm run dev\""
   },
   "dependencies": {

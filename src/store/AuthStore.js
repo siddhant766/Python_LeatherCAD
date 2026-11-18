@@ -1,7 +1,9 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:3000/api/auth';
+import { API_BASE } from '../utils/api';
+
+const API_URL = `${API_BASE}/auth`;
 
 const useAuthStore = create((set) => ({
     user: JSON.parse(localStorage.getItem('user')) || null,
