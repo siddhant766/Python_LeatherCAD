@@ -2,9 +2,11 @@ import { Button } from "../ui/button"
 import { ArrowRight, Play, Layers, ShoppingCart } from "lucide-react"
 import { useEffect, useState } from "react"
 import { Link } from "react-router-dom"
+import { useRole } from "../../hooks/useRole"
 
 export default function NewHeroSection() {
     const [isVisible, setIsVisible] = useState(false)
+    const { canCustomize } = useRole()
 
     useEffect(() => {
         setIsVisible(true)
@@ -61,12 +63,12 @@ export default function NewHeroSection() {
 
                         {/* CTA Buttons - white primary button */}
                         <div className="flex flex-wrap gap-4">
-                            <Link to="/customizer" className="no-underline">
+                            <Link to={canCustomize ? "/customizer" : "/catalog"} className="no-underline">
                                 <Button
                                     size="lg"
                                     className="bg-white text-black hover:bg-white/90 transition-all hover:scale-105 group px-8 shadow-lg shadow-white/10"
                                 >
-                                    Start Customizing
+                                    {canCustomize ? "Start Customizing" : "Explore Catalog"}
                                     <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
                                 </Button>
                             </Link>

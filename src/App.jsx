@@ -26,17 +26,14 @@ import PaymentPortal from './pages/PaymentPortal';
 import { CartSidebar } from './components/cart/CartSidebar';
 import { useCartStore } from './store/CartStore';
 import { SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
+import { useRole, ADMIN_EMAILS } from './hooks/useRole';
 
-const ADMIN_EMAILS = [
-    'kc3737381@gmail.com',
-    'siddhantpatel09090@gmail.com',
-    'kailash@example.com'
-];
-
+// Protect Admin Workspace: Only accessible to Admin accounts
 const RequireAdmin = ({ children }) => {
     const { user, isLoaded } = useUser();
     const devToken = localStorage.getItem('devToken');
     const localUser = JSON.parse(localStorage.getItem('user') || '{}');
+    const storedRole = localStorage.getItem('user_role');
 
     // Automatically sync Clerk user session into localStorage for API authentication
     if (user?.primaryEmailAddress?.emailAddress) {
@@ -56,12 +53,12 @@ const RequireAdmin = ({ children }) => {
         }
     }
 
-    // Allow Dev Token or local admin session
     if (
         devToken === 'dev-admin-token' ||
         (devToken && devToken.startsWith('DEV_TOKEN_') && ADMIN_EMAILS.some(e => devToken.toLowerCase().includes(e.toLowerCase()))) ||
         ADMIN_EMAILS.includes(localUser?.email?.toLowerCase()) ||
-        localUser?.role === 'admin'
+        localUser?.role === 'admin' ||
+        storedRole === 'admin'
     ) {
         return children;
     }
@@ -70,8 +67,26 @@ const RequireAdmin = ({ children }) => {
 
     const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
     if (!user || !userEmail || !ADMIN_EMAILS.includes(userEmail)) {
-        return <Navigate to="/login" replace />;
+        return <Navigate to="/login?role=admin" replace />;
     }
+    return children;
+};
+
+// Protect 3D Customizer: ONLY accessible to Designer / Seller (and Admin)
+const RequireDesigner = ({ children }) => {
+    const { isLoaded, isLoggedIn, canCustomize } = useRole();
+
+    if (!isLoaded) return null;
+
+    if (!isLoggedIn) {
+        return <Navigate to="/login?role=designer" replace />;
+    }
+
+    if (!canCustomize) {
+        // Customer tried to access 3D Customizer directly
+        return <Navigate to="/dashboard" replace />;
+    }
+
     return children;
 };
 
@@ -95,9 +110,9 @@ function AppContent() {
                 <Route path="/blog" element={<Layout><BlogPage /></Layout>} />
                 <Route path="/legal" element={<Layout><LegalPage /></Layout>} />
 
-                {/* Unified Login Route */}
+                {/* 3-Role Login Routes */}
                 <Route path="/login" element={<LoginPage />} />
-                <Route path="/admin-login" element={<Navigate to="/login" replace />} />
+                <Route path="/admin-login" element={<Navigate to="/login?role=admin" replace />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/forgot-password" element={<ForgotPwPage />} />
                 <Route path="/resetpassword/:token" element={<ResetPwPage />} />
@@ -113,11 +128,16 @@ function AppContent() {
                     </>
                 } />
 
-                {/* Redirect legacy routes */}
-                <Route path="/login/designer" element={<Navigate to="/login" replace />} />
-                <Route path="/login/admin" element={<Navigate to="/login" replace />} />
+                {/* Redirect legacy role login routes */}
+                <Route path="/login/designer" element={<Navigate to="/login?role=designer" replace />} />
+                <Route path="/login/admin" element={<Navigate to="/login?role=admin" replace />} />
 
-                <Route path="/customizer" element={<Customizer />} />
+                {/* 3D Customizer Route: Strictly Protected for Designer/Seller */}
+                <Route path="/customizer" element={
+                    <RequireDesigner>
+                        <Customizer />
+                    </RequireDesigner>
+                } />
 
                 {/* Protected Admin Route */}
                 <Route path="/admin" element={

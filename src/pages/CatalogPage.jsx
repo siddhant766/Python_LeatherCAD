@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Search, Filter, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/CartStore';
+import { useRole } from '../hooks/useRole';
 
 const products = [
     { id: 1, name: "The Classic Biker", price: 14999, category: "Jackets", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=600", tag: "Best Seller", type: "jacket" },
@@ -28,6 +29,7 @@ export default function CatalogPage() {
     const addItem = useCartStore(state => state.addItem);
     const toggleCart = useCartStore(state => state.toggleCart);
     const isOpen = useCartStore(state => state.isOpen);
+    const { canCustomize } = useRole();
 
     const handleAddToCart = (product, e) => {
         e.preventDefault();
@@ -147,9 +149,11 @@ export default function CatalogPage() {
                                     >
                                         <ShoppingBag size={20} />
                                     </button>
-                                    <Link to={`/customizer?product=${product.type || 'jacket'}`} className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform" title="Customize">
-                                        <Filter size={20} />
-                                    </Link>
+                                    {canCustomize && (
+                                        <Link to={`/customizer?product=${product.type || 'jacket'}`} className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform" title="Customize in 3D">
+                                            <Filter size={20} />
+                                        </Link>
+                                    )}
                                 </div>
                             </div>
                             <div className="p-6">

@@ -2,6 +2,7 @@ import { useState } from "react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { Button } from "../ui/button"
 import { Link } from "react-router-dom"
+import { useRole } from "../../hooks/useRole"
 
 import deanJacketImg from "../../assets/dean_jacket.png"
 
@@ -66,6 +67,7 @@ const products = [
 
 export default function ShowcaseSection() {
     const [activeIndex, setActiveIndex] = useState(0)
+    const { canCustomize } = useRole()
     const [isAnimating, setIsAnimating] = useState(false)
     const [direction, setDirection] = useState("right")
 
@@ -126,7 +128,7 @@ export default function ShowcaseSection() {
 
                             return (
                                 <Link
-                                    to={`/customizer?product=${product.slug}`}
+                                    to={canCustomize ? `/customizer?product=${product.slug}` : `/catalog`}
                                     key={`${index}-${offset}`}
                                     className={`
                     flex-shrink-0 w-72 md:w-80 transition-all duration-500 ease-out
@@ -156,7 +158,7 @@ export default function ShowcaseSection() {
                                         {/* Hover overlay with CTA */}
                                         <div className="absolute inset-0 bg-gradient-to-t from-black via-black/50 to-transparent opacity-0 group-hover:opacity-100 transition-all duration-300 flex items-center justify-center">
                                             <span className="px-6 py-3 bg-white text-black rounded-full text-sm font-semibold transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                                                Customize Now
+                                                {canCustomize ? "Customize Now" : "View in Catalog"}
                                             </span>
                                         </div>
 
@@ -219,7 +221,7 @@ export default function ShowcaseSection() {
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                         {products.map((product, index) => (
                             <Link
-                                to={`/customizer?product=${product.slug}`}
+                                to={canCustomize ? `/customizer?product=${product.slug}` : `/catalog`}
                                 key={index}
                                 className="group relative rounded-xl overflow-hidden bg-card border border-border hover:border-white/30 transition-all duration-300 hover:scale-105"
                             >

@@ -49,8 +49,8 @@ export default function OrdersPage() {
                 </div>
                 <h2 className="text-2xl font-bold mb-2">No orders yet</h2>
                 <p className="text-muted-foreground mb-6">Looks like you haven't purchased anything yet.</p>
-                <Link to="/customizer" className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors">
-                    Start Designing <ArrowRight size={18} />
+                <Link to="/catalog" className="inline-flex items-center gap-2 bg-primary text-primary-foreground px-6 py-3 rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                    Explore Catalog <ArrowRight size={18} />
                 </Link>
             </div>
         );

@@ -25,6 +25,7 @@ import { API_BASE } from '../utils/api';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/CartStore';
 import { useAuth } from '@clerk/clerk-react';
+import { useRole } from '../hooks/useRole';
 
 const DEFAULT_INR_PRICES = {
     bag: 4999,
@@ -39,6 +40,7 @@ export default function Customizer() {
     const navigate = useNavigate();
     const { getToken } = useAuth();
     const addItem = useCartStore(state => state.addItem);
+    const { canCustomize, isLoaded: isRoleLoaded } = useRole();
     const productFromUrl = searchParams.get('product') || 'bag';
 
     const captureRef = useRef(null);
@@ -278,6 +280,36 @@ export default function Customizer() {
     const handleColorChange = (color) => {
         setConfig(prev => ({ ...prev, [activePart]: color }));
     };
+
+    if (isRoleLoaded && !canCustomize) {
+        return (
+            <div className="min-h-screen bg-[#0a0a0a] flex items-center justify-center p-6 text-white font-sans">
+                <div className="max-w-md w-full bg-black/60 border border-white/10 p-8 rounded-3xl text-center backdrop-blur-xl shadow-2xl">
+                    <div className="w-16 h-16 rounded-2xl bg-gradient-to-tr from-[#D4AF37]/20 to-amber-500/20 text-[#D4AF37] border border-[#D4AF37]/40 flex items-center justify-center mx-auto mb-4 shadow-lg shadow-amber-500/10">
+                        <Sparkles size={28} />
+                    </div>
+                    <h2 className="text-2xl font-bold mb-2">Designer & Seller Access Only</h2>
+                    <p className="text-gray-400 text-sm mb-6 leading-relaxed">
+                        The 3D CAD Customization studio is exclusively reserved for <strong>Designer / Seller</strong> accounts to draft luxury leather goods and set retail prices. Customers can explore and purchase finished items directly from our catalog.
+                    </p>
+                    <div className="space-y-3">
+                        <Link
+                            to="/login?role=designer"
+                            className="block w-full py-3.5 bg-gradient-to-r from-[#D4AF37] to-[#B8860B] hover:brightness-110 text-black font-bold rounded-xl transition shadow-lg shadow-amber-500/20"
+                        >
+                            Sign In as Designer / Seller
+                        </Link>
+                        <Link
+                            to="/catalog"
+                            className="block w-full py-3.5 bg-white/10 hover:bg-white/20 text-white font-medium rounded-xl transition border border-white/10"
+                        >
+                            Browse Ready Catalog
+                        </Link>
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     if (isLoading) {
         return (

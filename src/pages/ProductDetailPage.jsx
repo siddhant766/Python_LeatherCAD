@@ -2,10 +2,12 @@ import { useParams, Link } from 'react-router-dom';
 import Navbar from '../components/layout/Navbar';
 import { ArrowLeft, ShoppingBag } from 'lucide-react';
 import { useCartStore } from '../store/CartStore';
+import { useRole } from '../hooks/useRole';
 
 export default function ProductDetailPage() {
     const { id } = useParams();
     const addItem = useCartStore(state => state.addItem);
+    const { canCustomize } = useRole();
 
     // Mock Product Data (In real app, fetch by ID)
     const product = {
@@ -30,8 +32,8 @@ export default function ProductDetailPage() {
                         <img src={product.image} alt={product.name} className="absolute inset-0 w-full h-full object-cover opacity-50" />
                         <div className="relative z-10 text-center">
                             <h3 className="text-2xl font-bold mb-4">3D Preview Loading...</h3>
-                            <Link to={`/customizer?product=jacket`} className="btn-primary px-8 py-3">
-                                Open 3D Configurator
+                            <Link to={canCustomize ? `/customizer?product=jacket` : `/catalog`} className="btn-primary px-8 py-3">
+                                {canCustomize ? "Open 3D Configurator" : "View Artisan Details"}
                             </Link>
                         </div>
                     </div>
@@ -55,10 +57,10 @@ export default function ProductDetailPage() {
                                 <ShoppingBag size={20} /> Add to Cart
                             </button>
                             <Link
-                                to={`/customizer?product=jacket`}
+                                to={canCustomize ? `/customizer?product=jacket` : `/catalog`}
                                 className="flex-1 border border-white/20 hover:bg-white/5 font-bold py-4 rounded-xl transition-colors flex items-center justify-center"
                             >
-                                Customize
+                                {canCustomize ? "Customize in 3D" : "View Details"}
                             </Link>
                         </div>
                     </div>

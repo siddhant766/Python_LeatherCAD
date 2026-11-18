@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { LayoutDashboard, ShoppingBag, Settings, LogOut, Plus, Search, ChevronRight, Edit, Download } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
+import { useRole } from '../hooks/useRole';
 import axios from 'axios';
 import { API_BASE } from '../utils/api';
 import OrdersPage from './OrdersPage';
@@ -10,7 +11,8 @@ import SettingsPage from './SettingsPage';
 export default function UserDashboard() {
     const navigate = useNavigate();
     const { user } = useUser();
-    const [activeTab, setActiveTab] = useState('designs');
+    const { canCustomize, isCustomer } = useRole();
+    const [activeTab, setActiveTab] = useState(isCustomer ? 'orders' : 'designs');
     const [designs, setDesigns] = useState([]);
     const [loading, setLoading] = useState(true);
 
@@ -34,7 +36,7 @@ export default function UserDashboard() {
     };
 
     const navItems = [
-        { id: 'designs', label: 'My Designs', icon: LayoutDashboard },
+        ...(canCustomize ? [{ id: 'designs', label: 'My Designs', icon: LayoutDashboard }] : []),
         { id: 'orders', label: 'Order History', icon: ShoppingBag },
         { id: 'settings', label: 'Settings', icon: Settings },
     ];
@@ -112,9 +114,9 @@ export default function UserDashboard() {
                                 className="pl-9 pr-4 py-2 rounded-lg bg-secondary/50 border border-border text-sm focus:outline-none focus:ring-1 focus:ring-primary w-64"
                             />
                         </div>
-                        <Link to="/customizer">
+                        <Link to={canCustomize ? "/customizer" : "/catalog"}>
                             <button className="flex items-center gap-2 bg-primary hover:bg-primary/90 text-primary-foreground px-4 py-2 rounded-lg transition-colors font-medium shadow-lg shadow-primary/20 text-sm">
-                                <Plus size={16} /> New Design
+                                {canCustomize ? <><Plus size={16} /> New Design</> : <><ShoppingBag size={16} /> Explore Catalog</>}
                             </button>
                         </Link>
                     </div>
@@ -138,9 +140,9 @@ export default function UserDashboard() {
                                     </div>
                                     <h3 className="text-lg font-medium text-foreground mb-2">No designs yet</h3>
                                     <p className="text-muted-foreground mb-6">Create your first custom leather product today.</p>
-                                    <Link to="/customizer">
+                                    <Link to={canCustomize ? "/customizer" : "/catalog"}>
                                         <button className="bg-primary text-primary-foreground px-6 py-2 rounded-lg font-medium hover:bg-primary/90 transition-colors">
-                                            Start Designing
+                                            {canCustomize ? "Start Designing" : "Browse Catalog"}
                                         </button>
                                     </Link>
                                 </div>
