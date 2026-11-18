@@ -621,59 +621,46 @@ def admin_stats(request):
     if request.user.role != 'admin' and not request.user.is_staff and request.user.email not in ADMIN_EMAILS:
         return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
 
-    users_count = max(User.objects.count(), 156)
-    products_count = max(Product.objects.count(), 42)
-    orders_count = max(Order.objects.count(), 89)
-    pending_review_count = max(Design.objects.filter(status='pending').count(), 2)
+    # Pure, 100% true database counts
+    users_count = User.objects.count()
+    products_count = Product.objects.count()
+    orders_count = Order.objects.count()
+    delivered_count = Order.objects.filter(is_delivered=True).count()
+    pending_review_count = Design.objects.filter(status='pending').count()
 
     paid_orders = Order.objects.filter(is_paid=True)
-    live_order_revenue = sum([float(o.total_price) for o in paid_orders])
-    total_revenue = round(12450.00 + live_order_revenue, 2)
+    total_revenue = round(sum([float(o.total_price) for o in paid_orders]), 2)
 
-    baseline_7d = {
-        'Mon': 4200.0,
-        'Tue': 3100.0,
-        'Wed': 2500.0,
-        'Thu': 2900.0,
-        'Fri': 4800.0,
-        'Sat': 5200.0,
-        'Sun': 3800.0,
-    }
-
-    # 1. Last 7 Days Revenue Breakdown (Daily)
+    # 1. Pure Last 7 Days Revenue Breakdown (Daily)
     today = timezone.now().date()
     revenue_data_7d = []
     for i in range(6, -1, -1):
         day = today - timedelta(days=i)
         day_orders = Order.objects.filter(is_paid=True, created_at__date=day)
         day_rev = sum(float(o.total_price) for o in day_orders)
-        day_name = day.strftime('%a')
-        base_rev = baseline_7d.get(day_name, 3500.0)
         revenue_data_7d.append({
-            'name': day_name,
+            'name': day.strftime('%a'),
             'date': day.strftime('%b %d'),
             'fullDate': day.strftime('%Y-%m-%d'),
-            'revenue': round(base_rev + day_rev, 2),
-            'orders': max(day_orders.count(), int(base_rev / 150))
+            'revenue': round(day_rev, 2),
+            'orders': day_orders.count()
         })
 
-    # 2. Last 30 Days Revenue Breakdown (Daily)
+    # 2. Pure Last 30 Days Revenue Breakdown (Daily)
     revenue_data_30d = []
     for i in range(29, -1, -1):
         day = today - timedelta(days=i)
         day_orders = Order.objects.filter(is_paid=True, created_at__date=day)
         day_rev = sum(float(o.total_price) for o in day_orders)
-        day_name = day.strftime('%a')
-        base_rev = baseline_7d.get(day_name, 3500.0)
         revenue_data_30d.append({
             'name': day.strftime('%d %b'),
             'date': day.strftime('%b %d'),
             'fullDate': day.strftime('%Y-%m-%d'),
-            'revenue': round(base_rev + day_rev, 2),
-            'orders': max(day_orders.count(), int(base_rev / 150))
+            'revenue': round(day_rev, 2),
+            'orders': day_orders.count()
         })
 
-    # 3. Live Recent Activity Stream (Designs + Orders combined)
+    # 3. Pure Live Recent Activity Stream (Designs + Orders from real database records)
     recent_designs = Design.objects.select_related('user', 'product').order_by('-created_at')[:8]
     recent_orders_list = Order.objects.select_related('user').order_by('-created_at')[:8]
 
@@ -706,47 +693,6 @@ def admin_stats(request):
             'avatar': user_name[0].upper()
         })
 
-    # Ensure baseline classic activities are included
-    classic_activities = [
-        {
-            'id': 'act_des_siddhant',
-            'type': 'design',
-            'title': 'Siddhant submitted "Cyberpunk Jacket"',
-            'subtitle': 'Biker Jacket',
-            'status': 'pending',
-            'amount': None,
-            'time': '2025-12-21T10:00:00Z',
-            'date': '12/21/2025',
-            'avatar': 'S'
-        },
-        {
-            'id': 'act_des_varsha',
-            'type': 'design',
-            'title': 'Varsha submitted "Floral Handbag"',
-            'subtitle': 'Tote Bag',
-            'status': 'approved',
-            'amount': None,
-            'time': '2025-12-20T14:30:00Z',
-            'date': '12/20/2025',
-            'avatar': 'V'
-        },
-        {
-            'id': 'act_des_kailash',
-            'type': 'design',
-            'title': 'Kailash submitted "Minimalist Wallet"',
-            'subtitle': 'Slim Wallet',
-            'status': 'pending',
-            'amount': None,
-            'time': '2025-12-22T09:15:00Z',
-            'date': '12/22/2025',
-            'avatar': 'K'
-        }
-    ]
-
-    for ca in classic_activities:
-        if not any(a.get('title') == ca['title'] for a in activities):
-            activities.append(ca)
-
     # Sort descending by real ISO timestamp
     activities.sort(key=lambda x: x.get('time') or '', reverse=True)
 
@@ -756,6 +702,7 @@ def admin_stats(request):
         'usersCount': users_count,
         'productsCount': products_count,
         'ordersCount': orders_count,
+        'deliveredCount': delivered_count,
         'pendingReviewCount': pending_review_count,
         'totalRevenue': total_revenue,
         'revenueData': revenue_data_7d,

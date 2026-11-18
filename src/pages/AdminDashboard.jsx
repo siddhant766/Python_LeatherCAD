@@ -9,55 +9,6 @@ import { useUser, useClerk, useAuth } from '@clerk/clerk-react';
 import { api } from '../utils/api';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
-const BASELINE_STATS = {
-    usersCount: 156,
-    productsCount: 42,
-    ordersCount: 89,
-    totalRevenue: 12450.00,
-    pendingReviewCount: 2,
-    recentOrders: []
-};
-
-const BASELINE_REVENUE_7D = [
-    { name: 'Mon', revenue: 4200, orders: 24, date: 'Mon' },
-    { name: 'Tue', revenue: 3100, orders: 18, date: 'Tue' },
-    { name: 'Wed', revenue: 2500, orders: 15, date: 'Wed' },
-    { name: 'Thu', revenue: 2900, orders: 20, date: 'Thu' },
-    { name: 'Fri', revenue: 4800, orders: 35, date: 'Fri' },
-    { name: 'Sat', revenue: 5200, orders: 40, date: 'Sat' },
-    { name: 'Sun', revenue: 3800, orders: 28, date: 'Sun' },
-];
-
-const BASELINE_ACTIVITIES = [
-    {
-        id: 'act_des_siddhant',
-        type: 'design',
-        title: 'Siddhant submitted "Cyberpunk Jacket"',
-        subtitle: 'Biker Jacket',
-        status: 'pending',
-        date: '12/21/2025',
-        avatar: 'S'
-    },
-    {
-        id: 'act_des_varsha',
-        type: 'design',
-        title: 'Varsha submitted "Floral Handbag"',
-        subtitle: 'Tote Bag',
-        status: 'approved',
-        date: '12/20/2025',
-        avatar: 'V'
-    },
-    {
-        id: 'act_des_kailash',
-        type: 'design',
-        title: 'Kailash submitted "Minimalist Wallet"',
-        subtitle: 'Slim Wallet',
-        status: 'pending',
-        date: '12/22/2025',
-        avatar: 'K'
-    }
-];
-
 export default function AdminDashboard() {
     const navigate = useNavigate();
     const { user, isLoaded } = useUser();
@@ -69,18 +20,26 @@ export default function AdminDashboard() {
     const [lastUpdated, setLastUpdated] = useState(null);
     const [showSignOutConfirm, setShowSignOutConfirm] = useState(false);
 
-    // Initial Data with rich baseline
-    const [stats, setStats] = useState(BASELINE_STATS);
+    // Pure 100% True Data States
+    const [stats, setStats] = useState({
+        usersCount: 0,
+        productsCount: 0,
+        ordersCount: 0,
+        deliveredCount: 0,
+        totalRevenue: 0.00,
+        pendingReviewCount: 0,
+        recentOrders: []
+    });
     const [products, setProducts] = useState([]);
     const [orders, setOrders] = useState([]);
     const [projects, setProjects] = useState([]);
     const [designs, setDesigns] = useState([]);
     const [materials, setMaterials] = useState([]);
     const [usersList, setUsersList] = useState([]);
-    const [revenueData, setRevenueData] = useState(BASELINE_REVENUE_7D);
-    const [revenueData7d, setRevenueData7d] = useState(BASELINE_REVENUE_7D);
+    const [revenueData, setRevenueData] = useState([]);
+    const [revenueData7d, setRevenueData7d] = useState([]);
     const [revenueData30d, setRevenueData30d] = useState([]);
-    const [recentActivity, setRecentActivity] = useState(BASELINE_ACTIVITIES);
+    const [recentActivity, setRecentActivity] = useState([]);
 
     // Form States
     const [newProduct, setNewProduct] = useState({ name: '', category: 'jacket', price_base: 0, description: '', thumbnailUrl: '', modelUrl: '' });
@@ -145,30 +104,31 @@ export default function AdminDashboard() {
             if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
                 const data = statsRes.value.data;
                 setStats({
-                    usersCount: data.usersCount ?? BASELINE_STATS.usersCount,
-                    productsCount: data.productsCount ?? BASELINE_STATS.productsCount,
-                    ordersCount: data.ordersCount ?? BASELINE_STATS.ordersCount,
-                    totalRevenue: data.totalRevenue ?? BASELINE_STATS.totalRevenue,
-                    pendingReviewCount: data.pendingReviewCount ?? BASELINE_STATS.pendingReviewCount,
+                    usersCount: data.usersCount ?? 0,
+                    productsCount: data.productsCount ?? 0,
+                    ordersCount: data.ordersCount ?? 0,
+                    deliveredCount: data.deliveredCount ?? 0,
+                    totalRevenue: data.totalRevenue ?? 0.00,
+                    pendingReviewCount: data.pendingReviewCount ?? 0,
                     recentOrders: data.recentOrders || []
                 });
 
-                if (Array.isArray(data.revenueData7d) && data.revenueData7d.length > 0) {
+                if (Array.isArray(data.revenueData7d)) {
                     setRevenueData7d(data.revenueData7d);
                 }
-                if (Array.isArray(data.revenueData30d) && data.revenueData30d.length > 0) {
+                if (Array.isArray(data.revenueData30d)) {
                     setRevenueData30d(data.revenueData30d);
                 }
 
-                if (chartRange === '7d' && Array.isArray(data.revenueData7d) && data.revenueData7d.length > 0) {
+                if (chartRange === '7d' && Array.isArray(data.revenueData7d)) {
                     setRevenueData(data.revenueData7d);
-                } else if (chartRange === '30d' && Array.isArray(data.revenueData30d) && data.revenueData30d.length > 0) {
+                } else if (chartRange === '30d' && Array.isArray(data.revenueData30d)) {
                     setRevenueData(data.revenueData30d);
-                } else if (Array.isArray(data.revenueData) && data.revenueData.length > 0) {
+                } else if (Array.isArray(data.revenueData)) {
                     setRevenueData(data.revenueData);
                 }
 
-                if (Array.isArray(data.recentActivity) && data.recentActivity.length > 0) {
+                if (Array.isArray(data.recentActivity)) {
                     setRecentActivity(data.recentActivity);
                 }
                 setLastUpdated(new Date());
@@ -456,14 +416,14 @@ export default function AdminDashboard() {
                                     },
                                     {
                                         label: 'Total Orders',
-                                        value: stats.ordersCount || orders.length,
+                                        value: stats.ordersCount ?? orders.length,
                                         icon: Package,
                                         color: 'text-blue-500',
-                                        subtext: `${orders.filter(o => o.isDelivered).length} delivered`
+                                        subtext: `${stats.deliveredCount ?? orders.filter(o => o.isDelivered).length} delivered`
                                     },
                                     {
                                         label: 'Active Users',
-                                        value: stats.usersCount || usersList.length,
+                                        value: stats.usersCount ?? usersList.length,
                                         icon: Users,
                                         color: 'text-purple-500',
                                         subtext: 'Registered accounts'
