@@ -685,7 +685,7 @@ def admin_stats(request):
             'id': f'act_ord_{o.id}',
             'type': 'order',
             'title': f'{user_name} placed Order #{o.id}',
-            'subtitle': f"${float(o.total_price):.2f} • {o.payment_method}",
+            'subtitle': f"₹{float(o.total_price):,.2f} • {o.payment_method}",
             'status': 'Delivered' if o.is_delivered else 'Paid',
             'amount': float(o.total_price),
             'time': o.created_at.isoformat() if o.created_at else None,
@@ -734,23 +734,48 @@ def payment_create_intent(request):
 @permission_classes([permissions.AllowAny])
 def ai_generate_design(request):
     prompt = request.data.get('prompt', '').strip()
-    product_type = request.data.get('productType', 'jacket').lower()
+    product_type = request.data.get('productType', 'bag').lower()
 
     if not prompt:
         return Response({'message': 'Prompt is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-    # Fallback palette
-    fallbacks = {
-        'jacket': {'body': '#333333', 'sleeves': '#000000', 'hardware': '#C0C0C0'},
-        'bag': {'body': '#8B4513', 'handle': '#654321', 'hardware': '#FFD700'},
-        'boots': {'body': '#5C4033', 'sole': '#1A1A1A', 'hardware': '#B87333'},
-        'boot': {'body': '#5C4033', 'sole': '#1A1A1A', 'hardware': '#B87333'},
-        'wallet': {'body': '#2c1810', 'hardware': '#d4af37'},
-        'belt': {'body': '#3d2314', 'hardware': '#c0c0c0'}
+    # Standard realistic INR prices by product type
+    base_inr_prices = {
+        'bag': 4999,
+        'jacket': 14999,
+        'boots': 5999,
+        'boot': 5999,
+        'wallet': 1499,
+        'belt': 1899
     }
 
+    # Intelligent theme matcher for smart fashion artisan responses
+    prompt_lower = prompt.lower()
+    
+    if 'cyberpunk' in prompt_lower or 'neon' in prompt_lower or 'futuristic' in prompt_lower:
+        fallback_config = {'body': '#0a0a0a', 'handle': '#8B00FF', 'sleeves': '#8B00FF', 'sole': '#00F0FF', 'hardware': '#00F0FF', 'interior': '#1A1A2E', 'strap': '#0a0a0a', 'buckle': '#00F0FF'}
+        fallback_reply = f"Here is an electrifying Cyberpunk concept for your {product_type}! Featuring deep obsidian matte leather accented with vibrant neon tones and titanium-finished hardware."
+        suggested_price = base_inr_prices.get(product_type, 4999) + 2000
+    elif 'vintage' in prompt_lower or 'distressed' in prompt_lower or 'rustic' in prompt_lower or 'retro' in prompt_lower:
+        fallback_config = {'body': '#8B4513', 'handle': '#5C4033', 'sleeves': '#8B4513', 'sole': '#3D2B1F', 'hardware': '#B8860B', 'interior': '#D2B48C', 'strap': '#8B4513', 'buckle': '#B8860B'}
+        fallback_reply = f"Crafted a timeless Vintage Tuscan palette for your {product_type}. Using warm vegetable-tanned saddle leather paired with antique brass hardware for a rich patina over time."
+        suggested_price = base_inr_prices.get(product_type, 4999) + 1200
+    elif 'stealth' in prompt_lower or 'black' in prompt_lower or 'minimal' in prompt_lower or 'dark' in prompt_lower:
+        fallback_config = {'body': '#111111', 'handle': '#1a1a1a', 'sleeves': '#111111', 'sole': '#0d0d0d', 'hardware': '#2C3539', 'interior': '#222222', 'strap': '#111111', 'buckle': '#2C3539'}
+        fallback_reply = f"Designed a sleek Minimalist Stealth edition for your {product_type}. Pure midnight black top-grain leather paired with brushed gunmetal accents for executive sophistication."
+        suggested_price = base_inr_prices.get(product_type, 4999) + 1500
+    elif 'royal' in prompt_lower or 'burgundy' in prompt_lower or 'wine' in prompt_lower or 'luxury' in prompt_lower:
+        fallback_config = {'body': '#4A0404', 'handle': '#2E0202', 'sleeves': '#4A0404', 'sole': '#1a1a1a', 'hardware': '#FFD700', 'interior': '#FFFDD0', 'strap': '#4A0404', 'buckle': '#FFD700'}
+        fallback_reply = f"Created an opulent Royal Burgundy & Gold design for your {product_type}. Deep Bordeaux aniline leather contrasted with polished 24K gold hardware for a regal finish."
+        suggested_price = base_inr_prices.get(product_type, 4999) + 3000
+    else:
+        fallback_config = {'body': '#654321', 'handle': '#3D2B1F', 'sleeves': '#654321', 'sole': '#1a1a1a', 'hardware': '#C0C0C0', 'interior': '#D2B48C', 'strap': '#654321', 'buckle': '#C0C0C0'}
+        fallback_reply = f"I've tailored a custom handcrafted design for your {product_type} inspired by '{prompt}'. Balanced with premium full-grain Italian leather tones and polished hardware."
+        suggested_price = base_inr_prices.get(product_type, 4999)
+
     config = None
-    api_key = settings.GEMINI_API_KEY
+    reply = fallback_reply
+    api_key = getattr(settings, 'GEMINI_API_KEY', None)
 
     if api_key:
         try:
@@ -759,28 +784,40 @@ def ai_generate_design(request):
             model = genai.GenerativeModel("gemini-1.5-flash")
 
             system_prompt = f"""
-You are a fashion design assistant for a leather product configurator.
-The user wants a description of a {product_type}.
-Return ONLY a valid JSON object with hex colors for the parts.
-For jacket: body, sleeves, hardware
-For bag: body, handle, hardware
-For boots/boot: body, sole, hardware
-For wallet: body, hardware
-For belt: body, hardware
-
+You are an expert luxury leather fashion artisan and CAD designer for LeatherCAD India.
+The user wants you to design a custom {product_type}.
 User prompt: "{prompt}"
-Return format:
-{{"body": "#...", "hardware": "#..."}}
+
+You must respond in valid JSON with these exact keys:
+1. "reply": A concise, stylish artisan response (2-3 sentences) explaining the aesthetic, leather grade recommendation, and styling tip.
+2. "config": JSON object with hex color codes for:
+   For jacket: body, sleeves, hardware
+   For bag: body, handle, hardware
+   For boots: body, sole, hardware
+   For wallet: body, interior, hardware
+   For belt: strap, buckle, hardware
+3. "suggestedPrice": A realistic Indian Rupee (INR) selling price integer between ₹1,499 and ₹24,999 appropriate for this leather product in India.
+
+Return ONLY the raw JSON object, without backticks or markdown formatting.
 """
             result = model.generate_content(system_prompt)
-            raw_text = result.text.strip()
-            clean_text = raw_text.replace('```json', '').replace('```', '').strip()
-            config = json.loads(clean_text)
+            raw_text = result.text.strip().replace('```json', '').replace('```', '').strip()
+            parsed = json.loads(raw_text)
+            if isinstance(parsed, dict) and 'config' in parsed:
+                config = parsed['config']
+                if parsed.get('reply'):
+                    reply = parsed['reply']
+                if parsed.get('suggestedPrice'):
+                    suggested_price = int(parsed['suggestedPrice'])
         except Exception as e:
-            print(f"[AI Generation Error]: {e}")
+            print(f"[Gemini AI Design Generation]: {e}")
 
     if not config:
-        config = fallbacks.get(product_type, fallbacks['jacket']).copy()
-        config['isFallback'] = True
+        config = fallback_config
 
-    return Response({'config': config})
+    return Response({
+        'config': config,
+        'reply': reply,
+        'suggestedPrice': suggested_price,
+        'productType': product_type
+    })

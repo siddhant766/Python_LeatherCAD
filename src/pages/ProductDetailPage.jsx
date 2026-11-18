@@ -11,7 +11,7 @@ export default function ProductDetailPage() {
     const product = {
         id: id,
         name: "Premium Biker Jacket",
-        price: 899,
+        price: 14999,
         description: "Hand-crafted from full-grain Italian leather. Features animated 3D preview and full customization options.",
         image: "https://images.unsplash.com/photo-1551028919-ac7fa7ea47ea?auto=format&fit=crop&q=80&w=600"
     };
@@ -40,7 +40,7 @@ export default function ProductDetailPage() {
                     <div className="space-y-8">
                         <div>
                             <h1 className="text-5xl font-bold mb-4">{product.name}</h1>
-                            <div className="text-3xl font-light text-primary">${product.price}</div>
+                            <div className="text-3xl font-light text-primary">₹{product.price.toLocaleString('en-IN')}</div>
                         </div>
 
                         <p className="text-gray-300 leading-relaxed text-lg">

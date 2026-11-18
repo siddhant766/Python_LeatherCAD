@@ -409,7 +409,7 @@ export default function AdminDashboard() {
                                 {[
                                     {
                                         label: 'Total Revenue',
-                                        value: `$${Number(stats.totalRevenue || 0).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
+                                        value: `₹${Number(stats.totalRevenue || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`,
                                         icon: ShoppingBag,
                                         color: 'text-green-500',
                                         subtext: 'From verified orders'
@@ -489,7 +489,7 @@ export default function AdminDashboard() {
                                                 </defs>
                                                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
                                                 <XAxis dataKey="name" axisLine={false} tickLine={false} />
-                                                <YAxis axisLine={false} tickLine={false} prefix="$" />
+                                                <YAxis axisLine={false} tickLine={false} tickFormatter={(v) => `₹${v}`} />
                                                 <RechartsTooltip
                                                     contentStyle={{
                                                         backgroundColor: 'hsl(var(--card))',
@@ -497,7 +497,7 @@ export default function AdminDashboard() {
                                                         borderRadius: '12px',
                                                         boxShadow: '0 10px 25px -5px rgba(0,0,0,0.5)'
                                                     }}
-                                                    formatter={(value) => [`$${Number(value).toFixed(2)}`, 'Revenue']}
+                                                    formatter={(value) => [`₹${Number(value).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`, 'Revenue']}
                                                     labelFormatter={(label, payload) => {
                                                         const item = payload?.[0]?.payload;
                                                         return item?.date ? `${label} (${item.date})` : label;
@@ -531,7 +531,7 @@ export default function AdminDashboard() {
                                                     <div className={`w-8 h-8 rounded-full flex items-center justify-center font-bold text-xs shrink-0 ${
                                                         act.type === 'order' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-blue-500/20 text-blue-400 border border-blue-500/30'
                                                     }`}>
-                                                        {act.avatar || (act.type === 'order' ? '$' : 'D')}
+                                                        {act.avatar || (act.type === 'order' ? '₹' : 'D')}
                                                     </div>
                                                     <div className="flex-1 min-w-0">
                                                         <div className="text-sm font-bold truncate">{act.title}</div>
@@ -571,7 +571,7 @@ export default function AdminDashboard() {
                                                 <td className="p-4 font-mono text-xs">#{order.id || order._id}</td>
                                                 <td className="p-4">{order.user?.name || order.user?.email}</td>
                                                 <td className="p-4 truncate max-w-[150px]">{Array.isArray(order.items) ? order.items.join(', ') : order.orderItems?.map(i => i.name).join(', ')}</td>
-                                                <td className="p-4 font-bold">${Number(order.total || order.totalPrice || 0).toFixed(2)}</td>
+                                                <td className="p-4 font-bold">₹{Number(order.total || order.totalPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                                                 <td className="p-4"><span className={`px-2 py-1 rounded text-xs font-semibold ${order.isDelivered ? 'bg-green-500/20 text-green-400 border border-green-500/30' : 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/30'}`}>{order.isDelivered ? 'Delivered' : 'Paid / Processing'}</span></td>
                                                 <td className="p-4 flex gap-2">
                                                     {!order.isDelivered && <button onClick={() => handleDeliver(order.id || order._id)} className="p-2 bg-primary/10 text-primary rounded hover:bg-primary/20 transition-all"><CheckCircle size={16} /></button>}
@@ -597,7 +597,7 @@ export default function AdminDashboard() {
                                         </div>
                                         <div className="p-4">
                                             <div className="font-bold">{p.name}</div>
-                                            <div className="text-sm text-muted-foreground">${p.price_base}</div>
+                                            <div className="text-sm text-muted-foreground">₹{Number(p.price_base || 0).toLocaleString('en-IN')}</div>
                                         </div>
                                     </div>
                                 ))}
@@ -606,7 +606,7 @@ export default function AdminDashboard() {
                                 <h3 className="font-bold mb-4">Add Product</h3>
                                 <form onSubmit={handleAddProduct} className="flex gap-4">
                                     <input placeholder="Name" className="border p-2 rounded w-full bg-secondary/20" value={newProduct.name} onChange={e => setNewProduct({ ...newProduct, name: e.target.value })} />
-                                    <input placeholder="Price" className="border p-2 rounded w-32 bg-secondary/20" type="number" value={newProduct.price_base} onChange={e => setNewProduct({ ...newProduct, price_base: e.target.value })} />
+                                    <input placeholder="Price (₹)" className="border p-2 rounded w-32 bg-secondary/20" type="number" value={newProduct.price_base} onChange={e => setNewProduct({ ...newProduct, price_base: e.target.value })} />
                                     <button className="bg-primary text-primary-foreground px-6 rounded font-semibold">Add</button>
                                 </form>
                             </div>

@@ -133,7 +133,7 @@ export function CustomizationPanel({ config, updateConfig, price, onAddToCart, p
             {/* Footer */}
             <div className="p-6 border-t border-border bg-card">
                 <Button onClick={onAddToCart} className="w-full size-lg bg-primary text-primary-foreground hover:bg-primary/90">
-                    Add to Cart - ${price}
+                    Add to Cart - ₹{price}
                 </Button>
             </div>
         </div>

@@ -1,24 +1,24 @@
 import { useState } from 'react';
-import { Search, Filter, ArrowRight, ShoppingBag } from 'lucide-react';
+import { Search, Filter, ShoppingBag } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/CartStore';
 
 const products = [
-    { id: 1, name: "The Classic Biker", price: 899, category: "Jackets", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=600", tag: "Best Seller", type: "jacket" },
-    { id: 2, name: "Weekend Duffel", price: 549, category: "Bags", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=600", tag: "New", type: "bag" },
-    { id: 3, name: "Cheng Chelsea", price: 449, category: "Shoes", image: "https://images.unsplash.com/photo-1638247025967-b4e38f787b76?auto=format&fit=crop&q=80&w=600", type: "boots" },
-    { id: 4, name: "Heritage Belt", price: 149, category: "Accessories", image: "https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&q=80&w=600", type: "belt" },
-    { id: 5, name: "Slim Wallet", price: 129, category: "Accessories", image: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&q=80&w=600", type: "wallet" },
-    { id: 6, name: "Dean Bike Jacket", price: 920, category: "Jackets", image: "/dean_jacket.png", type: "jacket" },
-    { id: 7, name: "Oxford Boots", price: 499, category: "Shoes", image: "https://images.unsplash.com/photo-1542841791-1925b02a2bbb?auto=format&fit=crop&q=80&w=600", type: "boots" },
-    { id: 8, name: "Light Messenger", price: 399, category: "Bags", image: "/light_messenger.png", type: "bag" },
-    { id: 9, name: "Racer Jacket", price: 950, category: "Jackets", image: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?auto=format&fit=crop&q=80&w=600", type: "jacket" },
-    { id: 10, name: "Travel Tote", price: 620, category: "Bags", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=600", type: "bag" },
-    { id: 11, name: "Work Boots", price: 520, category: "Shoes", image: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&q=80&w=600", type: "boots" },
-    { id: 12, name: "Braided Belt", price: 160, category: "Accessories", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=600", type: "belt" },
-    { id: 13, name: "Card Holder", price: 89, category: "Accessories", image: "https://images.unsplash.com/photo-1554981983-4ee4aeb2e62b?auto=format&fit=crop&q=80&w=600", type: "wallet" },
-    { id: 14, name: "Bomber Jacket", price: 850, category: "Jackets", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=600", type: "jacket" },
-    { id: 15, name: "White Backpack", price: 580, category: "Bags", image: "/white_backpack.png", type: "bag" },
+    { id: 1, name: "The Classic Biker", price: 14999, category: "Jackets", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=600", tag: "Best Seller", type: "jacket" },
+    { id: 2, name: "Weekend Duffel", price: 7999, category: "Bags", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=600", tag: "New", type: "bag" },
+    { id: 3, name: "Cheng Chelsea", price: 6499, category: "Shoes", image: "https://images.unsplash.com/photo-1638247025967-b4e38f787b76?auto=format&fit=crop&q=80&w=600", type: "boots" },
+    { id: 4, name: "Heritage Belt", price: 1899, category: "Accessories", image: "https://images.unsplash.com/photo-1624222247344-550fb60583dc?auto=format&fit=crop&q=80&w=600", type: "belt" },
+    { id: 5, name: "Slim Wallet", price: 1299, category: "Accessories", image: "https://images.unsplash.com/photo-1627123424574-724758594e93?auto=format&fit=crop&q=80&w=600", type: "wallet" },
+    { id: 6, name: "Dean Bike Jacket", price: 16499, category: "Jackets", image: "/dean_jacket.png", type: "jacket" },
+    { id: 7, name: "Oxford Boots", price: 6999, category: "Shoes", image: "https://images.unsplash.com/photo-1542841791-1925b02a2bbb?auto=format&fit=crop&q=80&w=600", type: "boots" },
+    { id: 8, name: "Light Messenger", price: 5499, category: "Bags", image: "/light_messenger.png", type: "bag" },
+    { id: 9, name: "Racer Jacket", price: 15999, category: "Jackets", image: "https://images.unsplash.com/photo-1487222477894-8943e31ef7b2?auto=format&fit=crop&q=80&w=600", type: "jacket" },
+    { id: 10, name: "Travel Tote", price: 6999, category: "Bags", image: "https://images.unsplash.com/photo-1584917865442-de89df76afd3?auto=format&fit=crop&q=80&w=600", type: "bag" },
+    { id: 11, name: "Work Boots", price: 5999, category: "Shoes", image: "https://images.unsplash.com/photo-1608256246200-53e635b5b65f?auto=format&fit=crop&q=80&w=600", type: "boots" },
+    { id: 12, name: "Braided Belt", price: 1999, category: "Accessories", image: "https://images.unsplash.com/photo-1553062407-98eeb64c6a62?auto=format&fit=crop&q=80&w=600", type: "belt" },
+    { id: 13, name: "Card Holder", price: 899, category: "Accessories", image: "https://images.unsplash.com/photo-1554981983-4ee4aeb2e62b?auto=format&fit=crop&q=80&w=600", type: "wallet" },
+    { id: 14, name: "Bomber Jacket", price: 13999, category: "Jackets", image: "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=600", type: "jacket" },
+    { id: 15, name: "White Backpack", price: 7499, category: "Bags", image: "/white_backpack.png", type: "bag" },
 ];
 
 export default function CatalogPage() {
@@ -158,7 +158,7 @@ export default function CatalogPage() {
                                         <div className="text-xs text-primary font-bold uppercase tracking-widest mb-1">{product.category}</div>
                                         <h3 className={`text-xl font-bold font-display ${isDarkMode ? 'text-white' : 'text-black'}`}>{product.name}</h3>
                                     </div>
-                                    <span className={`text-lg font-light ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>${product.price}</span>
+                                    <span className={`text-lg font-light ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>₹{product.price.toLocaleString('en-IN')}</span>
                                 </div>
                                 <button
                                     onClick={(e) => handleAddToCart(product, e)}

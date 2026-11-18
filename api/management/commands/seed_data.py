@@ -56,7 +56,7 @@ class Command(BaseCommand):
             {
                 'name': 'Classic Leather Jacket',
                 'category': 'jacket',
-                'price_base': 299.00,
+                'price_base': 14999.00,
                 'model_url': 'jacket',
                 'thumbnail_url': '/assets/jacket-thumb.jpg',
                 'description': 'Handcrafted premium grain motorcycle jacket with customizable panels and hardware.'
@@ -64,7 +64,7 @@ class Command(BaseCommand):
             {
                 'name': 'Premium Tote Bag',
                 'category': 'bag',
-                'price_base': 149.00,
+                'price_base': 4999.00,
                 'model_url': 'bag',
                 'thumbnail_url': '/assets/bag-thumb.jpg',
                 'description': 'Spacious everyday tote made from veg-tanned full-grain leather.'
@@ -72,7 +72,7 @@ class Command(BaseCommand):
             {
                 'name': 'Motorcycle Boots',
                 'category': 'boot',
-                'price_base': 199.00,
+                'price_base': 6999.00,
                 'model_url': 'boots',
                 'thumbnail_url': '/assets/boots-thumb.jpg',
                 'description': 'Durable riding boots reinforced with Goodyear welt construction.'
@@ -80,7 +80,7 @@ class Command(BaseCommand):
             {
                 'name': 'Heritage Belt',
                 'category': 'belt',
-                'price_base': 59.00,
+                'price_base': 1899.00,
                 'model_url': 'belt',
                 'thumbnail_url': '/assets/belt-thumb.jpg',
                 'description': 'Solid brass buckle with 100% thick saddle leather.'
@@ -88,7 +88,7 @@ class Command(BaseCommand):
             {
                 'name': 'Slim Wallet',
                 'category': 'wallet',
-                'price_base': 45.00,
+                'price_base': 1299.00,
                 'model_url': 'wallet',
                 'thumbnail_url': '/assets/wallet-thumb.jpg',
                 'description': 'Minimalist front-pocket bifold with RFID blocking lining.'
@@ -96,7 +96,7 @@ class Command(BaseCommand):
             {
                 'name': 'Weekender Duffle',
                 'category': 'bag',
-                'price_base': 249.00,
+                'price_base': 7499.00,
                 'model_url': 'bag',
                 'thumbnail_url': '/assets/duffle-thumb.jpg',
                 'description': 'Heavy-duty travel duffle featuring hand-stitched leather handles.'

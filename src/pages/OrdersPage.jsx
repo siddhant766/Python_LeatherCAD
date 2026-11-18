@@ -79,7 +79,7 @@ export default function OrdersPage() {
                                 </div>
                                 <div>
                                     <p className="text-sm text-muted-foreground mb-1">Total Amount</p>
-                                    <p className="font-bold text-lg">${order.totalPrice.toFixed(2)}</p>
+                                    <p className="font-bold text-lg">₹{Number(order.totalPrice || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
                                 </div>
                                 <div>
                                     <div className={`px-3 py-1 rounded-full text-xs font-medium inline-flex items-center gap-1
@@ -101,7 +101,7 @@ export default function OrdersPage() {
                                         </div>
                                         <div className="flex-1">
                                             <h4 className="font-medium line-clamp-1">{item.name}</h4>
-                                            <p className="text-sm text-muted-foreground">Qty: {item.qty} | ${item.price}</p>
+                                            <p className="text-sm text-muted-foreground">Qty: {item.qty} | ₹{Number(item.price || 0).toLocaleString('en-IN')}</p>
                                         </div>
                                     </div>
                                 ))}

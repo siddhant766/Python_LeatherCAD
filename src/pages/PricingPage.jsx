@@ -12,7 +12,7 @@ const tiers = [
     },
     {
         name: 'Pro Artisan',
-        price: '$29',
+        price: '₹2,499',
         period: '/month',
         description: 'For serious craftsmen and small studios.',
         features: ['Advanced 3D Rendering', 'Export DXF/SVG Patterns', 'Unlimited Saved Designs', 'Priority Support', 'Commercial License'],

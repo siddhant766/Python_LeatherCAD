@@ -188,14 +188,14 @@ export default function CheckoutPage() {
                                         <div className="font-medium">{item.name}</div>
                                         <div className="text-xs text-muted-foreground">Qty: {item.quantity}</div>
                                     </div>
-                                    <div>${item.price.toFixed(2)}</div>
+                                    <div>₹{Number(item.price || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>
                                 </div>
                             ))
                         )}
                     </div>
                     <div className="border-t border-border pt-4 flex justify-between font-bold text-lg">
                         <span>Total</span>
-                        <span>${cartTotal.toFixed(2)}</span>
+                        <span>₹{Number(cartTotal || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                     </div>
                 </div>
             </div>

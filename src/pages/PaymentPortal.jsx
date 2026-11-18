@@ -104,7 +104,7 @@ export default function PaymentPortal() {
 
                         <div className="mb-8">
                             <p className="text-gray-400 text-sm uppercase tracking-wider mb-1">Total Amount</p>
-                            <h1 className="text-4xl font-bold text-white">${total.toFixed(2)}</h1>
+                            <h1 className="text-4xl font-bold text-white">₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</h1>
                             <p className="text-xs text-gray-500 mt-2">Inc. all taxes & charges</p>
                         </div>
 
@@ -114,7 +114,7 @@ export default function PaymentPortal() {
                                 {items.map((item, i) => (
                                     <div key={i} className="flex justify-between items-start text-sm">
                                         <span className="text-gray-300">{item.name} <span className="text-gray-500">x{item.quantity}</span></span>
-                                        <span className="font-medium">${(item.price * item.quantity).toFixed(2)}</span>
+                                        <span className="font-medium">₹{(item.price * item.quantity).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                                     </div>
                                 ))}
                             </div>
@@ -224,7 +224,7 @@ export default function PaymentPortal() {
                                         <input type="text" placeholder="Card Holder Name" className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-primary" />
                                     </div>
                                     <button onClick={handlePayment} className="w-full bg-primary text-white font-bold py-3 rounded-xl shadow-lg shadow-primary/20 hover:bg-primary-hover transition-all">
-                                        Pay ${total.toFixed(2)}
+                                        Pay ₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                                     </button>
                                 </div>
                             )}

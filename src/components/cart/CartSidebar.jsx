@@ -55,7 +55,7 @@ export function CartSidebar() {
                                             {item.config?.colorName ? `${item.config.colorName}, ${item.config.leatherType}` : 'Standard Edition'}
                                         </p>
                                     </div>
-                                    <p className="font-bold text-sm shrink-0">${(item.price || 0) * (item.quantity || 1)}</p>
+                                    <p className="font-bold text-sm shrink-0">₹{((item.price || 0) * (item.quantity || 1)).toLocaleString('en-IN')}</p>
                                 </div>
 
                                 <div className="flex items-center justify-between mt-3">
@@ -93,7 +93,7 @@ export function CartSidebar() {
             <div className="p-6 border-t border-border bg-card">
                 <div className="flex justify-between mb-4 text-lg font-bold">
                     <span>Total</span>
-                    <span className="text-primary">${total.toFixed(2)}</span>
+                    <span className="text-primary">₹{total.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
                 </div>
                 <Button
                     className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-semibold py-3 rounded-xl shadow-lg shadow-primary/20"
