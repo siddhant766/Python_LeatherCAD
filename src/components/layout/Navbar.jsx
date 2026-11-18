@@ -110,13 +110,11 @@ export default function Navbar() {
                         <div className="flex items-center gap-3">
                             {/* Role Badge */}
                             {isDesigner && (
-                                <Link
-                                    to="/designer"
-                                    className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30 hover:bg-amber-500/20 transition-colors"
-                                    title="Designer Studio"
+                                <span
+                                    className="px-2.5 py-0.5 text-xs font-semibold rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/30"
                                 >
                                     Designer / Seller
-                                </Link>
+                                </span>
                             )}
                             {isCustomer && (
                                 <Link
@@ -138,15 +136,12 @@ export default function Navbar() {
                             )}
 
                             {/* Destination link based on role */}
-                            {isAdmin ? (
+                            {isAdmin && (
                                 <Link to="/admin" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
                                     Admin
                                 </Link>
-                            ) : isDesigner ? (
-                                <Link to="/designer" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
-                                    Studio
-                                </Link>
-                            ) : (
+                            )}
+                            {isCustomer && (
                                 <Link to="/orders" className="text-sm font-medium text-gray-300 hover:text-white transition-colors">
                                     My Orders
                                 </Link>
