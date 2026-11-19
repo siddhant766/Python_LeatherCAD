@@ -1,27 +1,27 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE } from '../utils/api';
+import api from '../utils/api';
 import { Package, Calendar, ChevronRight, Loader2, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@clerk/clerk-react';
+import useAuthStore from '../store/AuthStore';
+import { toast } from 'sonner';
 
 export default function OrdersPage() {
     const { getToken, isLoaded, isSignedIn } = useAuth();
+    const { isAuthenticated: isCustomAuth } = useAuthStore();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
         const fetchOrders = async () => {
-            if (!isLoaded || !isSignedIn) return;
+            const hasAuth = (isLoaded && isSignedIn) || isCustomAuth || !!sessionStorage.getItem('_at');
+            if (!hasAuth) {
+                setLoading(false);
+                return;
+            }
             try {
-                const token = await getToken();
-                const config = {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
-                };
-                const { data } = await axios.get(`${API_BASE}/orders/myorders`, config);
-                setOrders(data);
+                const { data } = await api.get('/orders/myorders');
+                setOrders(Array.isArray(data) ? data : []);
             } catch (error) {
                 console.error("Failed to fetch orders", error);
                 toast.error("Could not load your orders.");
@@ -31,7 +31,7 @@ export default function OrdersPage() {
         };
 
         fetchOrders();
-    }, [isLoaded, isSignedIn, getToken]);
+    }, [isLoaded, isSignedIn, isCustomAuth]);
 
     if (loading) {
         return (

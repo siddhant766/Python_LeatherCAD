@@ -20,8 +20,7 @@ import {
     IndianRupee,
     CheckCircle2
 } from 'lucide-react';
-import axios from 'axios';
-import { API_BASE } from '../utils/api';
+import api, { getAccessToken } from '../utils/api';
 import { Link, useSearchParams, useNavigate } from 'react-router-dom';
 import { useCartStore } from '../store/CartStore';
 import { useAuth } from '@clerk/clerk-react';
@@ -125,12 +124,9 @@ export default function Customizer() {
         if (!isChatOpen) setIsChatOpen(true);
 
         try {
-            const token = await getToken();
-            const response = await axios.post(`${API_BASE}/ai/generate-design`, {
+            const response = await api.post('/ai/generate-design', {
                 prompt: text,
                 productType: selectedProduct
-            }, {
-                headers: token ? { Authorization: `Bearer ${token}` } : {}
             });
 
             const data = response.data || {};
@@ -188,10 +184,10 @@ export default function Customizer() {
     useEffect(() => {
         const fetchProductId = async () => {
             try {
-                const response = await axios.get(`${API_BASE}/products`);
+                const response = await api.get('/products');
                 const product = response.data.find(p => p.category === selectedProduct || p.name.toLowerCase().includes(selectedProduct));
                 if (product) {
-                    setProductId(product._id);
+                    setProductId(product._id || product.id);
                 }
             } catch (error) {
                 console.error("Failed to fetch products:", error);
@@ -210,21 +206,19 @@ export default function Customizer() {
             const name = prompt("Enter a name for your design:", `My Custom ${selectedProduct}`);
             if (!name) return;
 
-            const token = await getToken();
-            if (!token) {
+            const token = getAccessToken();
+            if (!token && !isSignedIn) {
                 alert("Please login to save designs.");
                 navigate('/login');
                 return;
             }
 
-            await axios.post(`${API_BASE}/designs`, {
+            await api.post('/designs', {
                 product: productId,
                 name,
                 configuration: config,
                 price: Number(customPrice),
                 isPublic: false
-            }, {
-                headers: { Authorization: `Bearer ${token}` }
             });
             alert("Design saved successfully!");
         } catch (error) {

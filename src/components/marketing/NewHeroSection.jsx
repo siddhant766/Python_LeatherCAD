@@ -33,10 +33,10 @@ export default function NewHeroSection() {
                 }}
             />
 
-            <div className="relative max-w-7xl mx-auto px-6">
-                <div className="grid lg:grid-cols-2 gap-12 items-center min-h-[calc(100vh-6rem)]">
+            <div className="relative max-w-6xl mx-auto px-6 sm:px-10 lg:px-12">
+                <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 items-center min-h-[calc(100vh-6rem)]">
                     {/* Left Content */}
-                    <div className={`space-y-8 ${isVisible ? "animate-slide-up" : "opacity-0"}`}>
+                    <div className={`space-y-6 sm:space-y-7 max-w-xl mx-auto lg:mx-0 ${isVisible ? "animate-slide-up" : "opacity-0"}`}>
                         {/* Badge - with white border accent */}
                         <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/20 text-white text-sm">
                             <span className="relative flex h-2 w-2">
@@ -47,7 +47,7 @@ export default function NewHeroSection() {
                         </div>
 
                         {/* Headline - with white and brown accent */}
-                        <h1 className="text-5xl md:text-6xl lg:text-7xl font-bold leading-tight">
+                        <h1 className="text-4xl sm:text-5xl lg:text-[3.25rem] font-bold leading-[1.15] tracking-tight">
                             <span className="text-white">Design Your</span>
                             <br />
                             <span className="bg-gradient-to-r from-primary via-amber-600 to-primary bg-clip-text text-transparent">
@@ -56,7 +56,7 @@ export default function NewHeroSection() {
                         </h1>
 
                         {/* Description - lighter text */}
-                        <p className="text-lg text-white/70 max-w-lg leading-relaxed">
+                        <p className="text-base sm:text-lg text-white/75 max-w-md leading-relaxed">
                             Professional 3D customization software for leather artisans and MSMEs. Design, visualize, and order your
                             leather products with precision.
                         </p>
@@ -106,19 +106,14 @@ export default function NewHeroSection() {
                         {/* Main product image container - white border accent */}
                         <div className="relative rounded-3xl overflow-hidden bg-gradient-to-br from-white/10 to-white/[0.02] p-1 shadow-2xl border border-white/20">
                             <div className="relative aspect-square rounded-2xl overflow-hidden bg-gradient-to-br from-neutral-800 to-black">
-                                {/* 
-                   Replacing specific image with a high-quality placeholder that matches the theme.
-                   Ideally, we would run a generation tool here if we had one and time permitted, 
-                   but a sleek dark placeholder works for structure.
-                */}
                                 <img
                                     src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?q=80&w=2069&auto=format&fit=crop"
                                     alt="Leather Bag Design"
-                                    className="w-full h-full object-cover opacity-80 hover:scale-105 transition-transform duration-700"
+                                    className="w-full h-full object-cover opacity-90 animate-zoom-in-out transition-transform duration-700 ease-in-out will-change-transform"
                                 />
 
                                 {/* Gradient overlay */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-white/5" />
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-white/5 pointer-events-none" />
                             </div>
                         </div>
 

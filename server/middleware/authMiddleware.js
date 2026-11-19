@@ -11,68 +11,23 @@ export const protect = async (req, res, next) => {
         try {
             token = req.headers.authorization.split(' ')[1];
 
-            // DEV TOKEN (admin bypass) - Requested Static Token
-            if (token === 'dev-admin-token') {
-                req.user = {
-                    _id: 'dev_admin_id',
-                    name: 'Kailash',
-                    email: 'kailash@example.com',
-                    role: 'admin'
-                };
-                return next();
-            }
+            // Verify JWT token with secret
+            const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-            // DEV TOKEN BYPASS (Old logic)
-            if (token.startsWith('DEV_TOKEN_')) {
-                const email = token.replace('DEV_TOKEN_', '');
-                const user = await User.findOne({ email });
-                if (user) {
-                    req.user = user;
-                    return next();
-                }
-            }
-
-            const decoded = jwt.decode(token);
-
-            if (!decoded) {
+            if (!decoded || !decoded.id) {
                 return res.status(401).json({ message: 'Not authorized, token invalid' });
             }
 
-            // Sync User with MongoDB
-            // Clerk ID is in 'sub', email in 'email' (if present)
-            const clerkId = decoded.sub;
-            const email = decoded.email || decoded.primary_email_address || `clerk_${clerkId}@example.com`; // Fallback
-            const name = decoded.name || decoded.first_name || 'Clerk User';
-
-            // Find by clerkId OR email to link existing accounts
-            let user = await User.findOne({
-                $or: [{ clerkId: clerkId }, { email: email }]
-            });
-
-            if (user) {
-                // Update existing user with clerkId if missing
-                if (!user.clerkId) {
-                    user.clerkId = clerkId;
-                    await user.save();
-                }
-                req.user = user;
-            } else {
-                // Create new user in MongoDB
-                // Only create if we have enough info, otherwise it might be a partial token
-                const newUser = await User.create({
-                    name: name,
-                    email: email,
-                    clerkId: clerkId,
-                    role: 'designer', // Default role
-                    password: '$2a$10$clerkuserpasswordplaceholder' + Date.now() // Placeholder
-                });
-                req.user = newUser;
+            const user = await User.findById(decoded.id).select('-password');
+            if (!user) {
+                return res.status(401).json({ message: 'User not found' });
             }
 
+            req.user = user;
             next();
         } catch (error) {
-            console.error("Auth Middleware Error:", error);
-            res.status(401).json({ message: 'Not authorized, auth failed' });
+            console.error("Auth Middleware Error:", error.message);
+            res.status(401).json({ message: 'Not authorized, token failed' });
         }
     } else {
         res.status(401).json({ message: 'Not authorized, no token' });

@@ -7,6 +7,7 @@ import {
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser, useClerk, useAuth } from '@clerk/clerk-react';
 import { api } from '../utils/api';
+import useAuthStore from '../store/AuthStore';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer } from 'recharts';
 
 export default function AdminDashboard() {
@@ -47,58 +48,17 @@ export default function AdminDashboard() {
     const [newProject, setNewProject] = useState({ name: '', description: '' });
     const [newMaterial, setNewMaterial] = useState({ name: '', type: 'leather', color: '', price: 0, imageUrl: '' });
 
-    // Sync Clerk session & user email to localStorage immediately
-    useEffect(() => {
-        if (user && isLoaded) {
-            const email = user.primaryEmailAddress?.emailAddress?.toLowerCase();
-            if (email) {
-                localStorage.setItem('user_email', email);
-                localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
-                localStorage.setItem('user', JSON.stringify({
-                    email,
-                    name: user.fullName || (email.includes('siddhant') ? 'Siddhant Patel' : 'Kailash'),
-                    role: 'admin'
-                }));
-            }
-        }
-    }, [user, isLoaded]);
-
     // Live Data Fetcher
     const loadRealData = async (isManual = false) => {
         if (isManual) setLoading(true);
         try {
-            const adminEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase()
-                || localStorage.getItem('user_email')
-                || 'siddhantpatel09090@gmail.com';
-
-            let token = localStorage.getItem('devToken') || localStorage.getItem('token');
-            if (getToken) {
-                try {
-                    const clerkToken = await getToken();
-                    if (clerkToken) token = clerkToken;
-                } catch (e) {}
-            }
-            if (!token) {
-                token = `DEV_TOKEN_${adminEmail}`;
-            }
-
-            const reqConfig = {
-                headers: {
-                    'Authorization': `Bearer ${token}`,
-                    'X-User-Email': adminEmail
-                },
-                params: {
-                    admin_email: adminEmail
-                }
-            };
-
             const [statsRes, ordersRes, productsRes, projectsRes, designsRes, usersRes] = await Promise.allSettled([
-                api.get('/stats/admin', reqConfig),
-                api.get('/orders', reqConfig),
-                api.get('/products', reqConfig),
-                api.get('/projects', reqConfig),
-                api.get('/designs', reqConfig),
-                api.get('/users', reqConfig)
+                api.get('/stats/admin'),
+                api.get('/orders'),
+                api.get('/products'),
+                api.get('/projects'),
+                api.get('/designs'),
+                api.get('/users')
             ]);
 
             if (statsRes.status === 'fulfilled' && statsRes.value?.data) {
@@ -179,19 +139,13 @@ export default function AdminDashboard() {
 
     const handleSignOut = async () => {
         try {
-            // 1. Clear all authentication keys & tokens
-            localStorage.removeItem('devToken');
-            localStorage.removeItem('token');
-            localStorage.removeItem('user');
-
-            // 2. Terminate Clerk session if active
+            useAuthStore.getState().logout();
             if (signOut) {
                 await signOut();
             }
         } catch (err) {
             console.warn("Sign out warning:", err);
         } finally {
-            // 3. Redirect cleanly to login
             navigate('/login', { replace: true });
         }
     };
@@ -309,8 +263,9 @@ export default function AdminDashboard() {
         { id: 'settings', label: 'Settings', icon: Settings },
     ];
 
-    const currentAdminEmail = user?.primaryEmailAddress?.emailAddress || JSON.parse(localStorage.getItem('user') || '{}')?.email || 'kc3737381@gmail.com';
-    const currentAdminName = currentAdminEmail.toLowerCase().includes('siddhant') ? 'Siddhant Patel' : 'Kailash';
+    const authUser = useAuthStore((state) => state.user);
+    const currentAdminEmail = user?.primaryEmailAddress?.emailAddress || authUser?.email || 'Admin';
+    const currentAdminName = user?.fullName || authUser?.name || 'Administrator';
     const displayUser = { fullName: currentAdminName, email: currentAdminEmail };
 
     return (

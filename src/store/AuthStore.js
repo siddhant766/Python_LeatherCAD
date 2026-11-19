@@ -1,36 +1,52 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import api, { setAccessToken, clearAccessToken } from '../utils/api';
 
-import { API_BASE } from '../utils/api';
+const API_URL = '/auth';
 
-const API_URL = `${API_BASE}/auth`;
-
-const useAuthStore = create((set) => ({
-    user: JSON.parse(localStorage.getItem('user')) || null,
-    token: localStorage.getItem('token') || null,
-    isAuthenticated: !!localStorage.getItem('token'),
-    isLoading: false,
+const useAuthStore = create((set, get) => ({
+    user: null,
+    isAuthenticated: false,
+    isLoading: true, // Start true for initial rehydration
     error: null,
+
+    // Called on app mount to check if user has valid session
+    rehydrate: async () => {
+        try {
+            // Try to get a stored token from sessionStorage (survives refresh within tab)
+            const storedToken = sessionStorage.getItem('_at');
+            if (storedToken) {
+                setAccessToken(storedToken);
+                const response = await api.get(`${API_URL}/profile`);
+                set({
+                    user: response.data,
+                    isAuthenticated: true,
+                    isLoading: false,
+                });
+            } else {
+                set({ isLoading: false });
+            }
+        } catch {
+            clearAccessToken();
+            sessionStorage.removeItem('_at');
+            set({ user: null, isAuthenticated: false, isLoading: false });
+        }
+    },
 
     login: async (email, password, role) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post(`${API_URL}/login`, { email, password });
-
+            const response = await api.post(`${API_URL}/login`, { email, password });
             const { token, ...userData } = response.data;
 
-            // Check if the user has the correct role
             if (role && userData.role !== role && userData.role !== 'admin') {
-                // Allow admin to login anywhere, but restrict others
                 throw new Error(`Access denied. This portal is for ${role}s only.`);
             }
 
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('token', token);
+            setAccessToken(token);
+            sessionStorage.setItem('_at', token); // survives refresh, cleared on tab close
 
             set({
                 user: userData,
-                token: token,
                 isAuthenticated: true,
                 isLoading: false
             });
@@ -47,15 +63,14 @@ const useAuthStore = create((set) => ({
     signup: async (name, email, password, company, role = 'designer') => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post(`${API_URL}/register`, { name, email, password, company, role });
+            const response = await api.post(`${API_URL}/register`, { name, email, password, company, role });
             const { token, ...userData } = response.data;
 
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('token', token);
+            setAccessToken(token);
+            sessionStorage.setItem('_at', token);
 
             set({
                 user: userData,
-                token: token,
                 isAuthenticated: true,
                 isLoading: false
             });
@@ -72,15 +87,14 @@ const useAuthStore = create((set) => ({
     googleLogin: async (email, name, googleId) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.post(`${API_URL}/google`, { email, name, googleId });
+            const response = await api.post(`${API_URL}/google`, { email, name, googleId });
             const { token, ...userData } = response.data;
 
-            localStorage.setItem('user', JSON.stringify(userData));
-            localStorage.setItem('token', token);
+            setAccessToken(token);
+            sessionStorage.setItem('_at', token);
 
             set({
                 user: userData,
-                token: token,
                 isAuthenticated: true,
                 isLoading: false
             });
@@ -97,7 +111,7 @@ const useAuthStore = create((set) => ({
     forgotPassword: async (email) => {
         set({ isLoading: true, error: null });
         try {
-            await axios.post(`${API_URL}/forgotpassword`, { email });
+            await api.post(`${API_URL}/forgotpassword`, { email });
             set({ isLoading: false });
             return true;
         } catch (err) {
@@ -112,15 +126,7 @@ const useAuthStore = create((set) => ({
     resetPassword: async (token, password) => {
         set({ isLoading: true, error: null });
         try {
-            const response = await axios.put(`${API_URL}/resetpassword/${token}`, { password });
-            const { token: newToken, ...userData } = response.data; // Assuming backend returns user/token on success or we just redirect to login
-
-            // If backend auto-logs in:
-            if (newToken) {
-                localStorage.setItem('token', newToken);
-                // might need user data too if backend sends it.
-            }
-
+            await api.put(`${API_URL}/resetpassword/${token}`, { password });
             set({ isLoading: false });
             return true;
         } catch (err) {
@@ -133,10 +139,12 @@ const useAuthStore = create((set) => ({
     },
 
     logout: () => {
-        localStorage.removeItem('user');
-        localStorage.removeItem('token');
-        set({ user: null, token: null, isAuthenticated: false });
+        clearAccessToken();
+        sessionStorage.removeItem('_at');
+        set({ user: null, isAuthenticated: false });
     },
+
+    updateUser: (userData) => set((state) => ({ user: { ...state.user, ...userData } })),
 
     clearError: () => set({ error: null })
 }));

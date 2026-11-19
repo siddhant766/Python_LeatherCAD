@@ -97,4 +97,17 @@ body {
   .animation-delay-400 {
     animation-delay: 400ms;
   }
+
+  @keyframes zoomInOut {
+    0%, 100% {
+      transform: scale(1);
+    }
+    50% {
+      transform: scale(1.07);
+    }
+  }
+
+  .animate-zoom-in-out {
+    animation: zoomInOut 6s ease-in-out infinite;
+  }
 }

@@ -3,8 +3,8 @@ import { LayoutDashboard, ShoppingBag, Settings, LogOut, Plus, Search, ChevronRi
 import { useNavigate, Link } from 'react-router-dom';
 import { useUser } from '@clerk/clerk-react';
 import { useRole } from '../hooks/useRole';
-import axios from 'axios';
-import { API_BASE } from '../utils/api';
+import { api } from '../utils/api';
+import useAuthStore from '../store/AuthStore';
 import OrdersPage from './OrdersPage';
 import SettingsPage from './SettingsPage';
 
@@ -12,6 +12,7 @@ export default function UserDashboard() {
     const navigate = useNavigate();
     const { user } = useUser();
     const { canCustomize, isCustomer } = useRole();
+    const { logout } = useAuthStore();
     const [activeTab, setActiveTab] = useState(isCustomer ? 'orders' : 'designs');
     const [designs, setDesigns] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -22,11 +23,7 @@ export default function UserDashboard() {
 
     const fetchDesigns = async () => {
         try {
-            // Mock auth token usage - in real app use interceptor or auth context
-            const token = localStorage.getItem('token');
-            const config = token ? { headers: { Authorization: `Bearer ${token}` } } : {};
-
-            const response = await axios.get(`${API_BASE}/designs`, config);
+            const response = await api.get('/designs');
             setDesigns(Array.isArray(response.data) ? response.data : []);
             setLoading(false);
         } catch (error) {
@@ -89,7 +86,10 @@ export default function UserDashboard() {
 
                 <div className="p-4 border-t border-border">
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => {
+                            logout();
+                            navigate('/login');
+                        }}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                     >
                         <LogOut size={20} />

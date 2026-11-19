@@ -72,6 +72,10 @@ export default {
         'float-delayed': {
           '0%, 100%': { transform: 'translateY(0)' },
           '50%': { transform: 'translateY(-15px)' },
+        },
+        'zoom-in-out': {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.07)' },
         }
       },
       animation: {
@@ -79,6 +83,7 @@ export default {
         'fade-in': 'fade-in 1s ease-out forwards',
         'float': 'float 6s ease-in-out infinite',
         'float-delayed': 'float-delayed 7s ease-in-out infinite 2s',
+        'zoom-in-out': 'zoom-in-out 6s ease-in-out infinite',
       }
     },
   },

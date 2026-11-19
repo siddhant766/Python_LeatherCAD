@@ -2,16 +2,12 @@ import { useState } from 'react';
 import { CreditCard, Truck, CheckCircle, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
-import { API_BASE } from '../utils/api';
-
-
+import api, { getAccessToken } from '../utils/api';
 import { useCartStore } from '../store/CartStore';
-
 import { useAuth } from '@clerk/clerk-react';
 
 export default function CheckoutPage() {
-    const { getToken } = useAuth();
+    const { getToken, isSignedIn } = useAuth();
     const [step, setStep] = useState(1); // 1: Info, 2: Payment, 3: Success
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
@@ -46,16 +42,23 @@ export default function CheckoutPage() {
             await new Promise(resolve => setTimeout(resolve, 1500));
 
             // 3. Create Order in DB
-            const token = await getToken();
-            if (!token) {
+            const token = getAccessToken();
+            if (!token && !isSignedIn) {
                 toast.error("Please login to complete your order");
                 navigate('/login');
                 return;
             }
 
-            const orderConfig = {
-                headers: { Authorization: `Bearer ${token}` }
-            };
+            if (isSignedIn && getToken) {
+                try {
+                    const clerkToken = await getToken();
+                    if (clerkToken) {
+                        setAccessToken(clerkToken);
+                    }
+                } catch (e) {
+                    console.warn("Could not retrieve Clerk token", e);
+                }
+            }
 
             const orderData = {
                 orderItems: items.map(item => ({
@@ -81,13 +84,14 @@ export default function CheckoutPage() {
                 totalPrice: cartTotal,
             };
 
-            await axios.post(`${API_BASE}/orders`, orderData, orderConfig);
+            await api.post('/orders', orderData);
 
             clearCart();
             setStep(3);
         } catch (error) {
             console.error('Payment/Order failed', error);
-            toast.error(`Order creation failed: ${error.response?.data?.message || 'Something went wrong'}`);
+            const errMsg = error.response?.data?.message || error.response?.data?.detail || error.message || 'Something went wrong';
+            toast.error(`Order creation failed: ${errMsg}`);
         } finally {
             setLoading(false);
         }

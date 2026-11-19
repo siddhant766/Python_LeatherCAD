@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Search, Filter, ShoppingBag } from 'lucide-react';
+import { Search, Filter, ShoppingBag, Sun, Moon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { useCartStore } from '../store/CartStore';
 import { useRole } from '../hooks/useRole';
@@ -25,7 +25,7 @@ const products = [
 export default function CatalogPage() {
     const [selectedCategory, setSelectedCategory] = useState("All");
     const [searchQuery, setSearchQuery] = useState("");
-    const [isDarkMode, setIsDarkMode] = useState(true); // Default to Dark as per request
+    const [isDarkMode, setIsDarkMode] = useState(true);
     const addItem = useCartStore(state => state.addItem);
     const toggleCart = useCartStore(state => state.toggleCart);
     const isOpen = useCartStore(state => state.isOpen);
@@ -61,119 +61,232 @@ export default function CatalogPage() {
     });
 
     return (
-        <div className={`min-h-screen font-sans transition-colors duration-300 ${isDarkMode ? 'bg-[#0a0a0a] text-white' : 'bg-white text-black'}`}>
-            {/* Header */}
-            <header className={`border-b border-white/10 py-12 relative overflow-hidden`}>
-                {/* Background Blobs for Dark Mode */}
-                {isDarkMode && (
-                    <>
-                        <div className="absolute top-[-20%] left-[-10%] w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-                        <div className="absolute bottom-[-20%] right-[-10%] w-[500px] h-[500px] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none"></div>
-                    </>
-                )}
-
-                <div className="container mx-auto px-4 text-center relative z-10 w-full flex flex-col items-center">
-                    <h1 className="text-4xl md:text-5xl font-bold mb-4 font-display">Designed for Life</h1>
-                    <p className={`text-xl max-w-2xl mx-auto font-light ${isDarkMode ? 'text-gray-400' : 'text-gray-600'}`}>
-                        Explore our collection of premium, hand-crafted leather goods. Customize any piece to make it uniquely yours.
-                    </p>
-
-                    {/* Theme Toggle */}
+        <div
+            className={`min-h-screen font-sans transition-colors duration-300 ${
+                isDarkMode ? 'bg-[#0b0c0f] text-[#ededed]' : 'bg-[#faf7f7] text-[#1a1718]'
+            }`}
+        >
+            {/* Minimalist Editorial Header */}
+            <header
+                className={`py-14 md:py-18 relative transition-colors duration-300 border-b ${
+                    isDarkMode
+                        ? 'bg-[#0f1115] border-[#1b1e26]'
+                        : 'bg-[#fcf9f9] border-[#ede2e3]'
+                }`}
+            >
+                {/* Ultra-Minimal Top-Rightmost Theme Toggle */}
+                <div className="absolute top-5 right-5 sm:top-6 sm:right-6 md:top-8 md:right-8 z-20">
                     <button
                         onClick={() => setIsDarkMode(!isDarkMode)}
-                        className={`mt-8 px-6 py-2 rounded-full border transition-all flex items-center gap-2 ${isDarkMode
-                            ? 'bg-white text-black border-white hover:bg-gray-100'
-                            : 'bg-black text-white border-black hover:bg-gray-800'
-                            }`}
+                        aria-label="Toggle Theme"
+                        title={isDarkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+                        className={`flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-medium tracking-wide transition-all duration-200 border ${
+                            isDarkMode
+                                ? 'bg-[#151820] text-gray-300 border-[#232733] hover:text-white hover:border-gray-500 hover:bg-[#1a1e28]'
+                                : 'bg-white text-[#5c494c] border-[#e8dedf] hover:text-[#1a1718] hover:border-[#1a1718]/40 hover:bg-[#f5eded]'
+                        }`}
                     >
-                        {isDarkMode ? '☀ Light Mode' : '☾ Dark Mode'}
+                        {isDarkMode ? (
+                            <>
+                                <Sun size={13} className="text-[#dfad45]" />
+                                <span className="text-[11px]">Light</span>
+                            </>
+                        ) : (
+                            <>
+                                <Moon size={13} className="text-[#8a1e2b]" />
+                                <span className="text-[11px]">Dark</span>
+                            </>
+                        )}
                     </button>
+                </div>
+
+                {/* Minimal Header Content */}
+                <div className="container mx-auto px-6 text-center max-w-3xl">
+                    <h1 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight mb-3">
+                        Designed for Life
+                    </h1>
+                    <p
+                        className={`text-sm md:text-base font-normal leading-relaxed mx-auto max-w-xl ${
+                            isDarkMode ? 'text-[#8b919d]' : 'text-[#736466]'
+                        }`}
+                    >
+                        Hand-crafted luxury leather goods, tailored to your exact aesthetic. Customize any piece in 3D.
+                    </p>
                 </div>
             </header>
 
-            {/* Filters & Search - Simplistic implementation */}
-            <div className="container mx-auto px-4 py-8 flex flex-col md:flex-row gap-4 justify-between items-center relative z-10">
-                <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0">
-                    {["All", "Jackets", "Bags", "Shoes", "Accessories"].map(cat => (
-                        <button
-                            key={cat}
-                            onClick={() => setSelectedCategory(cat)}
-                            className={`px-4 py-2 rounded-full border transition-all text-sm font-medium ${selectedCategory === cat
-                                ? (isDarkMode ? 'bg-white text-black border-white' : 'bg-black text-white border-black')
-                                : (isDarkMode ? 'border-white/20 hover:border-white/50 text-gray-300' : 'border-black/20 hover:border-black/50 text-gray-600')
+            {/* Filter Bar & Search */}
+            <div className="container mx-auto px-4 sm:px-6 py-7 flex flex-col md:flex-row gap-4 justify-between items-center">
+                {/* Minimal Category Tabs */}
+                <div className="flex gap-1.5 overflow-x-auto w-full md:w-auto pb-1 md:pb-0 scrollbar-none">
+                    {["All", "Jackets", "Bags", "Shoes", "Accessories"].map(cat => {
+                        const isSelected = selectedCategory === cat;
+                        return (
+                            <button
+                                key={cat}
+                                onClick={() => setSelectedCategory(cat)}
+                                className={`px-4 py-1.5 rounded-full text-xs sm:text-sm font-medium tracking-wide transition-all duration-200 shrink-0 border ${
+                                    isSelected
+                                        ? (isDarkMode
+                                            ? 'bg-white text-[#0b0c0f] border-white font-semibold'
+                                            : 'bg-[#1a1718] text-white border-[#1a1718] font-semibold')
+                                        : (isDarkMode
+                                            ? 'bg-transparent text-[#8b919d] border-transparent hover:text-white hover:bg-white/5'
+                                            : 'bg-transparent text-[#736466] border-transparent hover:text-[#1a1718] hover:bg-black/5')
                                 }`}
-                        >
-                            {cat}
-                        </button>
-                    ))}
+                            >
+                                {cat}
+                            </button>
+                        );
+                    })}
                 </div>
+
+                {/* Minimal Search Input */}
                 <div className="relative w-full md:w-64">
-                    <Search className={`absolute left-3 top-1/2 -translate-y-1/2 ${isDarkMode ? 'text-gray-500' : 'text-gray-400'}`} size={18} />
+                    <Search
+                        className={`absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none ${
+                            isDarkMode ? 'text-gray-500' : 'text-[#9c8a8d]'
+                        }`}
+                        size={15}
+                    />
                     <input
                         type="text"
-                        placeholder="Search products..."
+                        placeholder="Search collection..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className={`w-full rounded-full py-2 pl-10 pr-4 text-sm focus:outline-none border ${isDarkMode
-                            ? 'bg-white/5 border-white/10 text-white focus:border-white'
-                            : 'bg-black/5 border-black/10 text-black focus:border-black'
-                            }`}
+                        className={`w-full rounded-full py-2 pl-9 pr-4 text-xs transition-colors duration-200 focus:outline-none border ${
+                            isDarkMode
+                                ? 'bg-[#12141a] border-[#222530] text-[#ededed] placeholder-gray-500 focus:border-[#dfad45]'
+                                : 'bg-white border-[#e5dcdd] text-[#1a1718] placeholder-[#9c8a8d] focus:border-[#8a1e2b]'
+                        }`}
                     />
                 </div>
             </div>
 
-            {/* Product Grid */}
-            <div className="container mx-auto px-4 pb-20 relative z-10">
-                <div className={`grid gap-8 transition-all duration-300 ${
-                    isOpen
-                        ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
-                        : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
-                }`}>
+            {/* Symmetrical Product Grid */}
+            <div className="container mx-auto px-4 sm:px-6 pb-20">
+                <div
+                    className={`grid gap-5 md:gap-6 transition-all duration-300 ${
+                        isOpen
+                            ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3'
+                            : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4'
+                    }`}
+                >
                     {filteredProducts.map(product => (
-                        <div key={product.id} className={`group rounded-2xl overflow-hidden border transition-all duration-300 hover:shadow-2xl ${isDarkMode
-                            ? 'bg-white/5 border-white/5 hover:border-white/20 hover:shadow-blue-500/5'
-                            : 'bg-white border-black/5 hover:border-black/10 hover:shadow-black/5'
-                            }`}>
-                            <div className="relative h-80 overflow-hidden">
-                                <img src={product.image} alt={product.name} className="w-full h-full object-cover transform group-hover:scale-105 transition-transform duration-700" />
+                        <div
+                            key={product.id}
+                            className={`group h-full flex flex-col justify-between rounded-xl overflow-hidden border transition-all duration-300 hover:shadow-lg ${
+                                isDarkMode
+                                    ? 'bg-[#12141a] border-[#1f222c] hover:border-[#2f3442]'
+                                    : 'bg-white border-[#ebdada] hover:border-[#c5b4b6]'
+                            }`}
+                        >
+                            {/* Card Image Container */}
+                            <div className="relative h-72 w-full overflow-hidden bg-neutral-900/5 shrink-0">
+                                <img
+                                    src={product.image}
+                                    alt={product.name}
+                                    className="w-full h-full object-cover transform group-hover:scale-104 transition-transform duration-500 ease-out"
+                                    onError={(e) => {
+                                        e.target.src = "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?auto=format&fit=crop&q=80&w=600";
+                                    }}
+                                />
+
+                                {/* Minimal Tag Badge */}
                                 {product.tag && (
-                                    <span className="absolute top-4 left-4 bg-primary text-white text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+                                    <span
+                                        className={`absolute top-3 left-3 text-[10px] font-semibold px-2 py-0.5 rounded tracking-wider uppercase border backdrop-blur-md ${
+                                            isDarkMode
+                                                ? 'bg-black/60 text-[#dfad45] border-[#dfad45]/20'
+                                                : 'bg-white/80 text-[#8a1e2b] border-[#8a1e2b]/20'
+                                        }`}
+                                    >
                                         {product.tag}
                                     </span>
                                 )}
-                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2 backdrop-blur-sm">
+
+                                {/* Hover Overlay Actions */}
+                                <div className="absolute inset-0 bg-black/35 opacity-0 group-hover:opacity-100 transition-opacity duration-200 flex items-center justify-center gap-2.5 backdrop-blur-[2px]">
                                     <button
                                         onClick={(e) => handleAddToCart(product, e)}
-                                        className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform"
+                                        className="bg-white text-[#12141a] p-2.5 rounded-full hover:scale-110 active:scale-95 transition-all shadow-md hover:bg-[#dfad45]"
                                         title="Add to Cart"
+                                        aria-label="Add to Cart"
                                     >
-                                        <ShoppingBag size={20} />
+                                        <ShoppingBag size={16} />
                                     </button>
                                     {canCustomize && (
-                                        <Link to={`/customizer?product=${product.type || 'jacket'}`} className="bg-white text-black p-3 rounded-full hover:scale-110 transition-transform" title="Customize in 3D">
-                                            <Filter size={20} />
+                                        <Link
+                                            to={`/customizer?product=${product.type || 'jacket'}`}
+                                            className="bg-white text-[#12141a] p-2.5 rounded-full hover:scale-110 active:scale-95 transition-all shadow-md hover:bg-[#dfad45]"
+                                            title="Customize in 3D"
+                                            aria-label="Customize in 3D"
+                                        >
+                                            <Filter size={16} />
                                         </Link>
                                     )}
                                 </div>
                             </div>
-                            <div className="p-6">
-                                <div className="flex justify-between items-start mb-2">
-                                    <div>
-                                        <div className="text-xs text-primary font-bold uppercase tracking-widest mb-1">{product.category}</div>
-                                        <h3 className={`text-xl font-bold font-display ${isDarkMode ? 'text-white' : 'text-black'}`}>{product.name}</h3>
+
+                            {/* Card Body */}
+                            <div className="p-4 flex-1 flex flex-col justify-between">
+                                <div>
+                                    {/* Category & Price Row */}
+                                    <div className="flex items-center justify-between mb-1 min-h-[18px]">
+                                        <span
+                                            className={`text-[10px] font-semibold uppercase tracking-widest ${
+                                                isDarkMode ? 'text-[#8b919d]' : 'text-[#736466]'
+                                            }`}
+                                        >
+                                            {product.category}
+                                        </span>
+                                        <span
+                                            className={`text-sm font-semibold tracking-tight ${
+                                                isDarkMode ? 'text-[#ededed]' : 'text-[#1a1718]'
+                                            }`}
+                                        >
+                                            ₹{product.price.toLocaleString('en-IN')}
+                                        </span>
                                     </div>
-                                    <span className={`text-lg font-light ${isDarkMode ? 'text-gray-300' : 'text-gray-600'}`}>₹{product.price.toLocaleString('en-IN')}</span>
+
+                                    {/* Product Title (1 line clamp for symmetry) */}
+                                    <h3
+                                        className={`text-base font-medium tracking-tight line-clamp-1 ${
+                                            isDarkMode ? 'text-white' : 'text-[#1a1718]'
+                                        }`}
+                                        title={product.name}
+                                    >
+                                        {product.name}
+                                    </h3>
                                 </div>
+
+                                {/* Premium Button with Left-to-Right Dark Transition */}
                                 <button
                                     onClick={(e) => handleAddToCart(product, e)}
-                                    className="w-full mt-4 bg-primary border border-transparent hover:bg-primary-hover text-white font-bold py-3 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-primary/20"
+                                    className="relative w-full overflow-hidden mt-3.5 py-2.5 px-3 rounded-lg font-semibold text-xs tracking-wider uppercase transition-all duration-300 shadow-sm group bg-[#dfad45] text-[#12141a] border border-[#dfad45]/40"
                                 >
-                                    <ShoppingBag size={16} /> Add to Cart
+                                    {/* Left to Right Dark Fill Transition */}
+                                    <span className="absolute inset-0 w-0 bg-[#0e1014] transition-all duration-400 ease-out group-hover:w-full"></span>
+
+                                    {/* Button Content */}
+                                    <span className="relative z-10 flex items-center justify-center gap-1.5 transition-colors duration-200 group-hover:text-[#dfad45]">
+                                        <ShoppingBag size={14} className="transition-transform duration-200 group-hover:scale-105" />
+                                        <span>Add to Cart</span>
+                                    </span>
                                 </button>
                             </div>
                         </div>
                     ))}
                 </div>
+
+                {/* Empty State */}
+                {filteredProducts.length === 0 && (
+                    <div className="text-center py-16">
+                        <p className={`text-sm ${isDarkMode ? 'text-gray-400' : 'text-gray-500'}`}>
+                            No products match your search or filter.
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );

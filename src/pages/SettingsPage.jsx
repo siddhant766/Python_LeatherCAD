@@ -1,12 +1,11 @@
 import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { API_BASE } from '../utils/api';
+import api from '../utils/api';
 import { User, Building, Mail, Lock, Loader2, Save } from 'lucide-react';
 import useAuthStore from '../store/AuthStore';
 import { toast } from 'sonner';
 
 export default function SettingsPage() {
-    const { user, token, isAuthenticated } = useAuthStore();
+    const { user, updateUser } = useAuthStore();
     const [loading, setLoading] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
@@ -42,12 +41,6 @@ export default function SettingsPage() {
         }
 
         try {
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
-            };
-
             const updateData = {
                 name: formData.name,
                 email: formData.email,
@@ -55,11 +48,9 @@ export default function SettingsPage() {
             };
             if (formData.password) updateData.password = formData.password;
 
-            const { data } = await axios.put(`${API_BASE}/auth/profile`, updateData, config);
+            const { data } = await api.put('/auth/profile', updateData);
 
-            // Update local storage
-            localStorage.setItem('user', JSON.stringify(data));
-            // Optional: Update store state if action existed (reload to keep simple or dispatch update)
+            updateUser(data);
             toast.success("Profile updated successfully");
             setFormData(prev => ({ ...prev, password: '', confirmPassword: '' }));
         } catch (error) {

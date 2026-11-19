@@ -1,12 +1,8 @@
 import { create } from 'zustand';
-import axios from 'axios';
+import api from '../utils/api';
+import { getAccessToken } from '../utils/api';
 
-import { API_BASE } from '../utils/api';
-
-const API_URL = `${API_BASE}/cart`;
-
-// Helper to get token
-const getToken = () => localStorage.getItem('token');
+const API_URL = '/cart';
 
 export const useCartStore = create((set, get) => ({
     items: [],
@@ -16,13 +12,10 @@ export const useCartStore = create((set, get) => ({
 
     // Fetch cart from server (call this on login)
     fetchCart: async () => {
-        const token = getToken();
-        if (!token) return;
+        if (!getAccessToken()) return;
 
         try {
-            const res = await axios.get(API_URL, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const res = await api.get(API_URL);
             // Map server items to frontend format if needed
             const serverItems = res.data.map(item => ({
                 id: item.productId || item._id, // Handle different ID formats
@@ -41,7 +34,7 @@ export const useCartStore = create((set, get) => ({
 
     addItem: async (product) => {
         // Optimistic UI Update
-        const token = getToken();
+        const hasToken = !!getAccessToken();
         set((state) => {
             const existing = state.items.find(item => item.id === product.id);
             if (existing) {
@@ -54,32 +47,25 @@ export const useCartStore = create((set, get) => ({
             return { items: [...state.items, { ...product, quantity: 1 }] };
         });
 
-        if (token) {
+        if (hasToken) {
             try {
-                await axios.post(`${API_URL}/add`, { item: product }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                // In a perfect world, we'd refetch or update with the server response to get the 'real' IDs
-                // For now, we trust the optimistic update or fetchCart will fix eventually
+                await api.post(`${API_URL}/add`, { item: product });
                 get().fetchCart(); // Re-sync to get proper IDs
             } catch (error) {
                 console.error("Failed to add to server cart", error);
-                // Revert on failure? For now, keep local
             }
         }
     },
 
     removeItem: async (id) => {
-        const token = getToken();
+        const hasToken = !!getAccessToken();
         set((state) => ({
             items: state.items.filter(item => item.id !== id && item._id !== id)
         }));
 
-        if (token) {
+        if (hasToken) {
             try {
-                await axios.post(`${API_URL}/remove`, { itemId: id }, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post(`${API_URL}/remove`, { itemId: id });
             } catch (error) {
                 console.error("Failed to remove from server cart", error);
             }
@@ -93,13 +79,11 @@ export const useCartStore = create((set, get) => ({
     })),
 
     clearCart: async () => {
-        const token = getToken();
+        const hasToken = !!getAccessToken();
         set({ items: [] });
-        if (token) {
+        if (hasToken) {
             try {
-                await axios.post(`${API_URL}/clear`, {}, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
+                await api.post(`${API_URL}/clear`, {});
             } catch (error) {
                 console.error("Failed to clear server cart", error);
             }

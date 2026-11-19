@@ -8,22 +8,28 @@ from django.utils import timezone
 from django.http import HttpResponse
 from django.contrib.auth import authenticate
 from rest_framework import status, permissions
-from rest_framework.decorators import api_view, permission_classes
+from rest_framework.decorators import api_view, permission_classes, throttle_classes
 from rest_framework.response import Response
+from rest_framework.throttling import UserRateThrottle
 
 from .models import User, Product, Design, Project, Order, Material
 from .serializers import (
     UserSerializer, ProductSerializer, DesignSerializer,
     ProjectSerializer, OrderSerializer, MaterialSerializer
 )
-from .authentication import IsAdminRole, ADMIN_EMAILS
+from .authentication import IsAdminRole
 from .pdf_service import generate_tech_pack_pdf
+
+
+class AIGenerateThrottle(UserRateThrottle):
+    scope = 'ai_generate'
+    rate = '5/minute'
 
 
 def generate_token(user_id):
     payload = {
         'id': user_id,
-        'exp': timezone.now() + timedelta(days=30),
+        'exp': timezone.now() + timedelta(days=7),
         'iat': timezone.now()
     }
     return jwt.encode(payload, settings.JWT_SECRET, algorithm='HS256')
@@ -40,7 +46,8 @@ def register(request):
     name = data.get('name', '').strip()
     email = data.get('email', '').strip().lower()
     password = data.get('password', '')
-    role = data.get('role', 'designer')
+    # SECURITY: Never accept role from user input — always default to 'designer'
+    role = 'designer'
     company = data.get('company', '')
 
     if not name:
@@ -151,7 +158,8 @@ def forgot_password(request):
         user.save()
 
         reset_url = f"http://localhost:5173/resetpassword/{reset_token}"
-        print(f"\n[MOCK EMAIL SERVICE]\nTo: {email}\nSubject: Password Reset Token\nReset Link: {reset_url}\n")
+        # SECURITY: Sanitized log — no PII (email/URL) in console output
+        print(f"[Password Reset] Reset email triggered for user ID: {user.id}")
         return Response({'success': True, 'data': 'Email sent'})
     except User.DoesNotExist:
         return Response({'message': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
@@ -187,6 +195,7 @@ def reset_password(request, resettoken):
 @api_view(['POST'])
 @permission_classes([permissions.AllowAny])
 def google_login(request):
+    # TODO: Verify Google ID token server-side with google.auth
     data = request.data
     email = data.get('email', '').strip().lower()
     name = data.get('name', 'Google User')
@@ -198,6 +207,7 @@ def google_login(request):
             user.google_id = google_id
             user.save()
     else:
+        # SECURITY: Force role to 'designer' for new users — never trust client input
         user = User.objects.create_user(
             username=email,
             email=email,
@@ -222,13 +232,17 @@ def google_login(request):
 # ==========================================
 
 @api_view(['GET', 'POST'])
+@permission_classes([permissions.AllowAny])
 def product_list_create(request):
     if request.method == 'GET':
         products = Product.objects.all().order_by('-created_at')
         serializer = ProductSerializer(products, many=True)
         return Response(serializer.data)
     elif request.method == 'POST':
-        if not (request.user and (request.user.role == 'admin' or request.user.is_staff)):
+        # Admin-only: create product
+        if not request.user or not request.user.is_authenticated:
+            return Response({'message': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        if not IsAdminRole().has_permission(request, None):
             return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
         serializer = ProductSerializer(data=request.data)
         if serializer.is_valid():
@@ -238,6 +252,7 @@ def product_list_create(request):
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
+@permission_classes([permissions.AllowAny])
 def product_detail(request, pk):
     try:
         product = Product.objects.get(pk=pk)
@@ -247,7 +262,10 @@ def product_detail(request, pk):
     if request.method == 'GET':
         return Response(ProductSerializer(product).data)
 
-    if not (request.user and (request.user.role == 'admin' or request.user.is_staff)):
+    # PUT/DELETE require admin
+    if not request.user or not request.user.is_authenticated:
+        return Response({'message': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+    if not IsAdminRole().has_permission(request, None):
         return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
 
     if request.method == 'PUT':
@@ -267,10 +285,8 @@ def product_detail(request, pk):
 # ==========================================
 
 @api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
 def design_list_create(request):
-    if not request.user or not request.user.is_authenticated:
-        return Response({'message': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
-
     if request.method == 'GET':
         if request.user.role == 'admin' or request.user.is_staff:
             designs = Design.objects.all().order_by('-updated_at')
@@ -296,6 +312,7 @@ def design_list_create(request):
 
 
 @api_view(['GET', 'DELETE'])
+@permission_classes([permissions.IsAuthenticated])
 def design_detail(request, pk):
     try:
         design = Design.objects.get(pk=pk)
@@ -303,11 +320,12 @@ def design_detail(request, pk):
         return Response({'message': 'Design not found'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.method == 'GET':
+        # SECURITY: Only owner, admin, or public design viewers can view (BOLA fix)
+        if not design.is_public and design.user_id != request.user.id and request.user.role != 'admin' and not request.user.is_staff:
+            return Response({'message': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
         return Response(DesignSerializer(design).data)
 
     elif request.method == 'DELETE':
-        if not request.user or not request.user.is_authenticated:
-            return Response({'message': 'Not authorized'}, status=status.HTTP_401_UNAUTHORIZED)
         if design.user_id != request.user.id and request.user.role != 'admin' and not request.user.is_staff:
             return Response({'message': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
         design.delete()
@@ -315,10 +333,8 @@ def design_detail(request, pk):
 
 
 @api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsAdminRole])
 def design_update_status(request, pk):
-    if request.user.role != 'admin' and not request.user.is_staff:
-        return Response({'message': 'Not authorized as admin'}, status=status.HTTP_403_FORBIDDEN)
     try:
         design = Design.objects.get(pk=pk)
     except Design.DoesNotExist:
@@ -353,12 +369,11 @@ def design_export_pdf(request, pk):
 # ==========================================
 
 @api_view(['GET', 'POST'])
+@permission_classes([permissions.IsAuthenticated])
 def order_list_create(request):
-    if not request.user or not request.user.is_authenticated:
-        return Response({'message': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
-
     if request.method == 'GET':
-        if request.user.role != 'admin' and not request.user.is_staff:
+        # Admin-only: list all orders
+        if not IsAdminRole().has_permission(request, None):
             return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
         orders = Order.objects.all().order_by('-created_at')
         return Response(OrderSerializer(orders, many=True).data)
@@ -369,15 +384,49 @@ def order_list_create(request):
         if not order_items:
             return Response({'message': 'No order items'}, status=status.HTTP_400_BAD_REQUEST)
 
+        # SECURITY: Recalculate and validate prices server-side from product database
+        calculated_items_price = 0.0
+        validated_items = []
+        for item in order_items:
+            product_id = item.get('product') or item.get('productId') or item.get('id')
+            qty = max(1, int(item.get('qty') or item.get('quantity') or 1))
+            unit_price = 0.0
+            if product_id:
+                try:
+                    product_obj = Product.objects.get(pk=product_id)
+                    unit_price = float(product_obj.price_base)
+                except Exception:
+                    try:
+                        unit_price = float(item.get('price', 0.0))
+                    except Exception:
+                        unit_price = 0.0
+            else:
+                try:
+                    unit_price = float(item.get('price', 0.0))
+                except Exception:
+                    unit_price = 0.0
+
+            unit_price = max(0.0, unit_price)
+            calculated_items_price += unit_price * qty
+            validated_item = dict(item)
+            validated_item['price'] = unit_price
+            validated_item['qty'] = qty
+            validated_items.append(validated_item)
+
+        items_price = round(calculated_items_price, 2)
+        shipping_price = max(0.0, float(data.get('shippingPrice', 0.0)))
+        tax_price = max(0.0, float(data.get('taxPrice', 0.0)))
+        total_price = round(items_price + shipping_price + tax_price, 2)
+
         order = Order.objects.create(
             user=request.user,
-            order_items=order_items,
+            order_items=validated_items,
             shipping_address=data.get('shippingAddress', {}),
             payment_method=data.get('paymentMethod', 'Credit Card'),
-            items_price=data.get('itemsPrice', 0.0),
-            tax_price=data.get('taxPrice', 0.0),
-            shipping_price=data.get('shippingPrice', 0.0),
-            total_price=data.get('totalPrice', 0.0),
+            items_price=items_price,
+            tax_price=tax_price,
+            shipping_price=shipping_price,
+            total_price=total_price,
             is_paid=True,
             paid_at=timezone.now()
         )
@@ -392,10 +441,8 @@ def order_my_orders(request):
 
 
 @api_view(['PUT'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsAdminRole])
 def order_deliver(request, pk):
-    if request.user.role != 'admin' and not request.user.is_staff:
-        return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
     try:
         order = Order.objects.get(pk=pk)
         order.is_delivered = True
@@ -407,10 +454,8 @@ def order_deliver(request, pk):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsAdminRole])
 def order_delete(request, pk):
-    if request.user.role != 'admin' and not request.user.is_staff:
-        return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
     try:
         order = Order.objects.get(pk=pk)
         order.delete()
@@ -427,7 +472,11 @@ def order_delete(request, pk):
 @permission_classes([permissions.IsAuthenticated])
 def project_list_create(request):
     if request.method == 'GET':
-        projects = Project.objects.all().order_by('-created_at')
+        # SECURITY: Non-admins see only their own projects
+        if request.user.role == 'admin' or request.user.is_staff:
+            projects = Project.objects.all().order_by('-created_at')
+        else:
+            projects = Project.objects.filter(created_by=request.user).order_by('-created_at')
         return Response(ProjectSerializer(projects, many=True).data)
     elif request.method == 'POST':
         serializer = ProjectSerializer(data=request.data)
@@ -445,6 +494,10 @@ def project_detail(request, pk):
     except Project.DoesNotExist:
         return Response({'message': 'Project not found'}, status=status.HTTP_404_NOT_FOUND)
 
+    # SECURITY: Ownership check — only owner or admin can modify/delete
+    if project.created_by != request.user and request.user.role != 'admin' and not request.user.is_staff:
+        return Response({'message': 'Not authorized'}, status=status.HTTP_403_FORBIDDEN)
+
     if request.method == 'PUT':
         serializer = ProjectSerializer(project, data=request.data, partial=True)
         if serializer.is_valid():
@@ -461,12 +514,16 @@ def project_detail(request, pk):
 # ==========================================
 
 @api_view(['GET', 'POST'])
+@permission_classes([permissions.AllowAny])
 def material_list_create(request):
     if request.method == 'GET':
         materials = Material.objects.all().order_by('-created_at')
         return Response(MaterialSerializer(materials, many=True).data)
     elif request.method == 'POST':
-        if not (request.user and (request.user.role == 'admin' or request.user.is_staff)):
+        # Admin-only: create material
+        if not request.user or not request.user.is_authenticated:
+            return Response({'message': 'Authentication required'}, status=status.HTTP_401_UNAUTHORIZED)
+        if not IsAdminRole().has_permission(request, None):
             return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
         serializer = MaterialSerializer(data=request.data)
         if serializer.is_valid():
@@ -476,10 +533,8 @@ def material_list_create(request):
 
 
 @api_view(['DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsAdminRole])
 def material_delete(request, pk):
-    if request.user.role != 'admin' and not request.user.is_staff:
-        return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
     try:
         material = Material.objects.get(pk=pk)
         material.delete()
@@ -575,19 +630,15 @@ def cart_clear(request):
 # ==========================================
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsAdminRole])
 def user_list(request):
-    if request.user.role != 'admin' and not request.user.is_staff:
-        return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
     users = User.objects.all().order_by('-id')
     return Response(UserSerializer(users, many=True).data)
 
 
 @api_view(['GET', 'PUT', 'DELETE'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsAdminRole])
 def user_detail(request, pk):
-    if request.user.role != 'admin' and not request.user.is_staff:
-        return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
     try:
         user = User.objects.get(pk=pk)
     except User.DoesNotExist:
@@ -616,11 +667,8 @@ def user_detail(request, pk):
 # ==========================================
 
 @api_view(['GET'])
-@permission_classes([permissions.IsAuthenticated])
+@permission_classes([permissions.IsAuthenticated, IsAdminRole])
 def admin_stats(request):
-    if request.user.role != 'admin' and not request.user.is_staff and request.user.email not in ADMIN_EMAILS:
-        return Response({'message': 'Admin access required'}, status=status.HTTP_403_FORBIDDEN)
-
     # Pure, 100% true database counts
     users_count = User.objects.count()
     products_count = Product.objects.count()
@@ -718,7 +766,7 @@ def admin_stats(request):
 # ==========================================
 
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([permissions.IsAuthenticated])
 def payment_create_intent(request):
     return Response({
         'clientSecret': f"mock_client_secret_{int(timezone.now().timestamp())}",
@@ -731,10 +779,11 @@ def payment_create_intent(request):
 # ==========================================
 
 @api_view(['POST'])
-@permission_classes([permissions.AllowAny])
+@permission_classes([permissions.IsAuthenticated])
+@throttle_classes([AIGenerateThrottle])
 def ai_generate_design(request):
-    prompt = request.data.get('prompt', '').strip()
-    product_type = request.data.get('productType', 'bag').lower()
+    prompt = str(request.data.get('prompt', '')).strip()[:500]
+    product_type = str(request.data.get('productType', 'bag')).strip().lower()
 
     if not prompt:
         return Response({'message': 'Prompt is required'}, status=status.HTTP_400_BAD_REQUEST)

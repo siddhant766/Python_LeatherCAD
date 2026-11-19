@@ -39,7 +39,7 @@ router.post('/register', [
             name,
             email,
             password,
-            role: role || 'designer',
+            role: 'designer',
             company
         });
 

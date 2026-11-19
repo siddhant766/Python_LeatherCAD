@@ -3,6 +3,7 @@ import { ShoppingBag, User, Shield, Sparkles, LogOut } from 'lucide-react';
 import { SignedIn, SignedOut, UserButton, useClerk } from '@clerk/clerk-react';
 import { useCartStore } from '../../store/CartStore';
 import { useRole } from '../../hooks/useRole';
+import useAuthStore from '../../store/AuthStore';
 
 export default function Navbar() {
     const location = useLocation();
@@ -35,11 +36,7 @@ export default function Navbar() {
 
     const handleSignOut = async () => {
         if (window.confirm("Are you sure you want to sign out?")) {
-            localStorage.removeItem('devToken');
-            localStorage.removeItem('user_email');
-            localStorage.removeItem('user');
-            localStorage.removeItem('user_role');
-            localStorage.removeItem('token');
+            useAuthStore.getState().logout();
             try {
                 await signOut();
             } catch (err) {

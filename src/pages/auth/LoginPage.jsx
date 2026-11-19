@@ -1,26 +1,29 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { SignIn } from "@clerk/clerk-react";
-import { Link, useSearchParams } from 'react-router-dom';
-import { ShieldCheck, User, Sparkles, ShoppingBag, Palette } from 'lucide-react';
+import { Link, useSearchParams, Navigate } from 'react-router-dom';
+import { ShieldCheck, ShoppingBag, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { useRole } from '../../hooks/useRole';
 
 const LoginPage = () => {
+    const { isLoaded, isLoggedIn, isAdmin: userIsAdmin, isDesigner: userIsDesigner } = useRole();
     const [searchParams] = useSearchParams();
     const roleParam = searchParams.get('role'); // 'customer' | 'designer' | 'admin'
     const initialRole = (roleParam === 'designer' || roleParam === 'admin') ? roleParam : 'customer';
 
-    // 3 Distinct Login Types: 'customer' | 'designer' | 'admin' | 'dev'
+    // 3 Distinct Login Types: 'customer' | 'designer' | 'admin'
     const [loginType, setLoginType] = useState(initialRole);
-
-    useEffect(() => {
-        if (loginType !== 'dev') {
-            localStorage.setItem('user_role', loginType);
-        }
-    }, [loginType]);
 
     const isCustomer = loginType === 'customer';
     const isDesigner = loginType === 'designer';
     const isAdmin = loginType === 'admin';
+
+    // If user is already authenticated, redirect straight to their dashboard
+    if (isLoaded && isLoggedIn) {
+        if (userIsAdmin) return <Navigate to="/admin" replace />;
+        if (userIsDesigner) return <Navigate to="/customizer" replace />;
+        return <Navigate to="/catalog" replace />;
+    }
 
     // Dynamic destination based on active role
     const getRedirectUrl = () => {
@@ -51,7 +54,6 @@ const LoginPage = () => {
                         {isCustomer && "Sign in as Customer to browse catalog & purchase items"}
                         {isDesigner && "Sign in as Designer / Seller to customize in 3D & sell creations"}
                         {isAdmin && "Administrative access for live statistics & store control"}
-                        {loginType === 'dev' && "Developer Quick Access with pre-configured sessions"}
                     </p>
                 </div>
 
@@ -100,190 +102,47 @@ const LoginPage = () => {
                     </button>
                 </div>
 
-                {/* Dev Mode Shortcut Badge */}
-                <div className="absolute top-5 right-5">
-                    <button
-                        type="button"
-                        onClick={() => setLoginType(loginType === 'dev' ? 'customer' : 'dev')}
-                        className="text-[11px] px-2.5 py-1 rounded-full bg-white/10 hover:bg-white/20 text-yellow-300 font-semibold border border-yellow-500/30 transition-all"
-                    >
-                        {loginType === 'dev' ? 'Exit Dev' : 'Dev Mode'}
-                    </button>
-                </div>
-
                 {/* Login Form Container */}
                 <div className="flex justify-center">
-                    {loginType === 'dev' ? (
-                        <div className="w-full space-y-4">
-                            <div className="bg-yellow-500/10 border border-yellow-500/40 p-3 rounded-xl text-yellow-200 text-xs mb-3">
-                                <strong>Developer One-Click Login:</strong> Instantly test each of the 3 user roles:
-                            </div>
-
-                            <div className="grid grid-cols-2 gap-2.5">
-                                {/* Customer Demo Login */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const email = 'customer@leathercad.com';
-                                        localStorage.setItem('user_email', email);
-                                        localStorage.setItem('user_role', 'customer');
-                                        localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
-                                        localStorage.setItem('user', JSON.stringify({ email, name: 'Ananya Sharma', role: 'customer' }));
-                                        window.location.href = '/catalog';
-                                    }}
-                                    className="bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-blue-600/20"
-                                >
-                                    <ShoppingBag size={14} />
-                                    Customer Login
-                                </button>
-
-                                {/* Designer Demo Login */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const email = 'designer@leathercad.com';
-                                        localStorage.setItem('user_email', email);
-                                        localStorage.setItem('user_role', 'designer');
-                                        localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
-                                        localStorage.setItem('user', JSON.stringify({ email, name: 'Rajesh Artisan', role: 'designer' }));
-                                        window.location.href = '/customizer';
-                                    }}
-                                    className="bg-gradient-to-r from-[#D4AF37] to-[#B8860B] hover:brightness-110 text-black text-xs font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20"
-                                >
-                                    <Sparkles size={14} />
-                                    Designer / Seller
-                                </button>
-
-                                {/* Admin Siddhant Login */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const email = 'siddhantpatel09090@gmail.com';
-                                        localStorage.setItem('user_email', email);
-                                        localStorage.setItem('user_role', 'admin');
-                                        localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
-                                        localStorage.setItem('user', JSON.stringify({ email, name: 'Siddhant Patel', role: 'admin' }));
-                                        window.location.href = '/admin';
-                                    }}
-                                    className="bg-red-600 hover:bg-red-500 text-white text-xs font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-red-600/20"
-                                >
-                                    <ShieldCheck size={14} />
-                                    Admin (Siddhant)
-                                </button>
-
-                                {/* Admin Kailash Login */}
-                                <button
-                                    type="button"
-                                    onClick={() => {
-                                        const email = 'kc3737381@gmail.com';
-                                        localStorage.setItem('user_email', email);
-                                        localStorage.setItem('user_role', 'admin');
-                                        localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
-                                        localStorage.setItem('user', JSON.stringify({ email, name: 'Kailash', role: 'admin' }));
-                                        window.location.href = '/admin';
-                                    }}
-                                    className="bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 shadow-md shadow-purple-600/20"
-                                >
-                                    <ShieldCheck size={14} />
-                                    Admin (Kailash)
-                                </button>
-                            </div>
-
-                            {/* Custom Email Dev Login */}
-                            <form
-                                onSubmit={(e) => {
-                                    e.preventDefault();
-                                    const email = e.target.email.value.trim().toLowerCase();
-                                    const chosenRole = e.target.role.value;
-                                    const adminEmails = ['kc3737381@gmail.com', 'siddhantpatel09090@gmail.com'];
-                                    
-                                    const finalRole = adminEmails.includes(email) ? 'admin' : chosenRole;
-                                    localStorage.setItem('user_email', email);
-                                    localStorage.setItem('user_role', finalRole);
-                                    localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
-                                    localStorage.setItem('user', JSON.stringify({
-                                        email,
-                                        name: email.split('@')[0],
-                                        role: finalRole
-                                    }));
-
-                                    if (finalRole === 'admin') window.location.href = '/admin';
-                                    else if (finalRole === 'designer') window.location.href = '/customizer';
-                                    else window.location.href = '/catalog';
-                                }}
-                                className="space-y-3 pt-2 border-t border-white/10"
-                            >
-                                <div>
-                                    <label className="block text-gray-300 text-xs font-semibold mb-1">Custom Dev Email</label>
-                                    <input
-                                        name="email"
-                                        type="email"
-                                        defaultValue="designer@leathercad.com"
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-2.5 text-white text-sm outline-none focus:border-[#D4AF37]"
-                                    />
-                                </div>
-                                <div>
-                                    <label className="block text-gray-300 text-xs font-semibold mb-1">Assigned Role</label>
-                                    <select
-                                        name="role"
-                                        defaultValue="designer"
-                                        className="w-full bg-neutral-900 border border-white/10 rounded-xl p-2.5 text-white text-sm outline-none focus:border-[#D4AF37]"
-                                    >
-                                        <option value="customer">Customer (Purchase Items & Browse)</option>
-                                        <option value="designer">Designer / Seller (3D Studio & Sell)</option>
-                                        <option value="admin">Admin (Full Control)</option>
-                                    </select>
-                                </div>
-                                <button
-                                    type="submit"
-                                    className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-2.5 rounded-xl transition shadow-lg text-sm"
-                                >
-                                    Sign In with Custom Dev Account
-                                </button>
-                            </form>
-                        </div>
-                    ) : (
-                        <div className="w-full">
-                            <SignIn
-                                key={loginType}
-                                path="/login"
-                                routing="path"
-                                fallbackRedirectUrl={getRedirectUrl()}
-                                signUpUrl={`/signup?role=${loginType}`}
-                                appearance={{
-                                    layout: {
-                                        socialButtonsPlacement: "bottom",
-                                        socialButtonsVariant: "blockButton",
-                                    },
-                                    variables: {
-                                        colorPrimary: isCustomer ? "#2563eb" : isDesigner ? "#D4AF37" : "#dc2626",
-                                        colorText: "#ffffff",
-                                        colorBackground: "transparent",
-                                        colorInputBackground: "#171717",
-                                        colorInputText: "#ffffff",
-                                        colorTextSecondary: "#9ca3af",
-                                        borderRadius: "0.75rem",
-                                        colorAlphaShade: "white"
-                                    },
-                                    elements: {
-                                        rootBox: "w-full",
-                                        card: "shadow-none border-none w-full p-0 bg-transparent",
-                                        headerTitle: "text-white text-lg font-bold text-center",
-                                        headerSubtitle: "text-gray-400 text-xs text-center mt-1",
-                                        otpCodeFieldInput: "!text-white !bg-[#171717] !border-white/30 focus:!border-[#D4AF37] rounded-xl text-center text-xl font-bold",
-                                        formButtonPrimary: "font-bold shadow-lg hover:shadow-xl transition-all",
-                                        socialButtonsBlockButton: "border-white/10 text-gray-200 hover:bg-white/5",
-                                        dividerLine: "bg-white/10",
-                                        dividerText: "text-gray-500",
-                                        formFieldLabel: "text-gray-300 font-medium mb-1",
-                                        formFieldInput: "border-white/10 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 bg-white/5",
-                                        footerActionText: "text-gray-400",
-                                        footerActionLink: `font-medium ${isCustomer ? 'text-blue-400 hover:text-blue-300' : isDesigner ? 'text-[#D4AF37] hover:text-amber-300' : 'text-red-400 hover:text-red-300'}`
-                                    }
-                                }}
-                            />
-                        </div>
-                    )}
+                    <div className="w-full">
+                        <SignIn
+                            path="/login"
+                            routing="path"
+                            fallbackRedirectUrl={getRedirectUrl()}
+                            signUpUrl={`/signup?role=${loginType}`}
+                            appearance={{
+                                layout: {
+                                    socialButtonsPlacement: "bottom",
+                                    socialButtonsVariant: "blockButton",
+                                },
+                                variables: {
+                                    colorPrimary: isCustomer ? "#2563eb" : isDesigner ? "#D4AF37" : "#dc2626",
+                                    colorText: "#ffffff",
+                                    colorBackground: "transparent",
+                                    colorInputBackground: "#171717",
+                                    colorInputText: "#ffffff",
+                                    colorTextSecondary: "#9ca3af",
+                                    borderRadius: "0.75rem",
+                                    colorAlphaShade: "white"
+                                },
+                                elements: {
+                                    rootBox: "w-full",
+                                    card: "shadow-none border-none w-full p-0 bg-transparent",
+                                    headerTitle: "text-white text-lg font-bold text-center",
+                                    headerSubtitle: "text-gray-400 text-xs text-center mt-1",
+                                    otpCodeFieldInput: "!text-white !bg-[#171717] !border-white/30 focus:!border-[#D4AF37] rounded-xl text-center text-xl font-bold",
+                                    formButtonPrimary: "font-bold shadow-lg hover:shadow-xl transition-all",
+                                    socialButtonsBlockButton: "border-white/10 text-gray-200 hover:bg-white/5",
+                                    dividerLine: "bg-white/10",
+                                    dividerText: "text-gray-500",
+                                    formFieldLabel: "text-gray-300 font-medium mb-1",
+                                    formFieldInput: "border-white/10 focus:border-[#D4AF37] focus:ring-[#D4AF37]/20 bg-white/5",
+                                    footerActionText: "text-gray-400",
+                                    footerActionLink: `font-medium ${isCustomer ? 'text-blue-400 hover:text-blue-300' : isDesigner ? 'text-[#D4AF37] hover:text-amber-300' : 'text-red-400 hover:text-red-300'}`
+                                }
+                            }}
+                        />
+                    </div>
                 </div>
             </motion.div>
         </div>

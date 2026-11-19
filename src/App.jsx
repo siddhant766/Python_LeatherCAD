@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { Toaster } from 'sonner';
 import Layout from './components/layout/Layout';
@@ -26,47 +27,15 @@ import PaymentPortal from './pages/PaymentPortal';
 import { CartSidebar } from './components/cart/CartSidebar';
 import { useCartStore } from './store/CartStore';
 import { SignedIn, SignedOut, useUser } from '@clerk/clerk-react';
-import { useRole, ADMIN_EMAILS } from './hooks/useRole';
+import { useRole } from './hooks/useRole';
+import useAuthStore from './store/AuthStore';
 
-// Protect Admin Workspace: Only accessible to Admin accounts
+// Protect Admin Workspace: Only accessible to Admin accounts (server-verified)
 const RequireAdmin = ({ children }) => {
-    const { user, isLoaded } = useUser();
-    const devToken = localStorage.getItem('devToken');
-    const localUser = JSON.parse(localStorage.getItem('user') || '{}');
-    const storedRole = localStorage.getItem('user_role');
-
-    // Automatically sync Clerk user session into localStorage for API authentication
-    if (user?.primaryEmailAddress?.emailAddress) {
-        const email = user.primaryEmailAddress.emailAddress.toLowerCase();
-        localStorage.setItem('user_email', email);
-        if (ADMIN_EMAILS.includes(email)) {
-            if (!devToken || devToken === 'null') {
-                localStorage.setItem('devToken', `DEV_TOKEN_${email}`);
-            }
-            if (!localUser?.email) {
-                localStorage.setItem('user', JSON.stringify({
-                    email,
-                    name: user.fullName || (email.includes('siddhant') ? 'Siddhant Patel' : 'Kailash'),
-                    role: 'admin'
-                }));
-            }
-        }
-    }
-
-    if (
-        devToken === 'dev-admin-token' ||
-        (devToken && devToken.startsWith('DEV_TOKEN_') && ADMIN_EMAILS.some(e => devToken.toLowerCase().includes(e.toLowerCase()))) ||
-        ADMIN_EMAILS.includes(localUser?.email?.toLowerCase()) ||
-        localUser?.role === 'admin' ||
-        storedRole === 'admin'
-    ) {
-        return children;
-    }
+    const { isLoaded, isLoggedIn, isAdmin } = useRole();
 
     if (!isLoaded) return null;
-
-    const userEmail = user?.primaryEmailAddress?.emailAddress?.toLowerCase();
-    if (!user || !userEmail || !ADMIN_EMAILS.includes(userEmail)) {
+    if (!isLoggedIn || !isAdmin) {
         return <Navigate to="/login?role=admin" replace />;
     }
     return children;
@@ -95,6 +64,11 @@ function AppContent() {
     const isOpen = useCartStore((state) => state.isOpen);
     const isStandaloneRoute = location.pathname.startsWith('/admin') || location.pathname.startsWith('/customizer');
     const shouldShift = isOpen && !isStandaloneRoute;
+
+    // Rehydrate auth state on mount
+    useEffect(() => {
+        useAuthStore.getState().rehydrate();
+    }, []);
 
     return (
         <div className={`transition-all duration-300 ease-in-out ${shouldShift ? 'md:mr-[400px] lg:mr-[448px]' : ''}`}>

@@ -1,20 +1,20 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { PenTool, Plus, LogOut, LayoutDashboard, Image as ImageIcon, Box, ChevronRight, ShoppingBag } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
-import axios from 'axios';
-import { API_BASE } from '../utils/api';
+import api from '../utils/api';
+import useAuthStore from '../store/AuthStore';
 import OrdersPage from './OrdersPage';
 
 export default function DesignerDashboard() {
     const navigate = useNavigate();
     const [activeTab, setActiveTab] = useState('designs');
+    const { isAuthenticated, logout } = useAuthStore();
 
     const [designs, setDesigns] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem('token');
-        if (!token) {
+        if (!isAuthenticated && !sessionStorage.getItem('_at')) {
             navigate('/login');
             return;
         }
@@ -22,38 +22,30 @@ export default function DesignerDashboard() {
         if (activeTab === 'designs') {
             fetchDesigns();
         }
-    }, [activeTab, navigate]);
+    }, [activeTab, navigate, isAuthenticated]);
 
     const fetchDesigns = async () => {
         try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get(`${API_BASE}/designs`, {
-                headers: { Authorization: `Bearer ${token}` }
-            });
+            const response = await api.get('/designs');
             // Ensure we're setting an array
             setDesigns(Array.isArray(response.data) ? response.data : []);
             setLoading(false);
         } catch (error) {
             console.error('Error fetching designs:', error);
             if (error.response && error.response.status === 401) {
-                // Token invalid or expired
-                localStorage.removeItem('token');
-                localStorage.removeItem('user');
+                logout();
                 navigate('/login');
             }
             setLoading(false);
-            setDesigns([]); // Fallback to empty array
+            setDesigns([]);
         }
     };
 
     const handleDelete = async (id) => {
         if (window.confirm('Are you sure you want to delete this design?')) {
             try {
-                const token = localStorage.getItem('token');
-                await axios.delete(`${API_BASE}/designs/${id}`, {
-                    headers: { Authorization: `Bearer ${token}` }
-                });
-                fetchDesigns(); // Refresh list
+                await api.delete(`/designs/${id}`);
+                fetchDesigns();
             } catch (error) {
                 console.error('Error deleting design:', error);
             }
@@ -100,7 +92,10 @@ export default function DesignerDashboard() {
 
                 <div className="p-4 border-t border-border">
                     <button
-                        onClick={() => navigate('/login')}
+                        onClick={() => {
+                            logout();
+                            navigate('/login');
+                        }}
                         className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                     >
                         <LogOut size={20} />
